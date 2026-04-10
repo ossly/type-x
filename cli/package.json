@@ -1,7 +1,6 @@
 {
-  "name": "type-x",
+  "name": "@type-x/cli",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
   "bin": {
     "x": "./dist/src/cli.js"
