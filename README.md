@@ -1,5 +1,9 @@
 # type-x
 
+A simple CLI runtime for installable command packages.
+
+## Structure
+
 - `cli`: main `type-x` CLI package, `@type-x/cli`
 - `packages/typescript-config`: shared TypeScript config
 - `packages/eslint-config`: shared ESLint config
