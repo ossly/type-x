@@ -1,0 +1,26 @@
+{
+  "name": "type-x",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "x": "./dist/src/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/src/cli.js",
+    "smoke": "pnpm run build && node dist/src/cli.js hello",
+    "lint": "eslint . --max-warnings 0",
+    "check-types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@type-x/eslint-config": "workspace:*",
+    "@type-x/typescript-config": "workspace:*",
+    "@types/node": "^25.6.0",
+    "eslint": "^9.39.1",
+    "typescript": "5.9.2"
+  }
+}
