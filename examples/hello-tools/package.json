@@ -6,7 +6,7 @@
     "runtime": "1",
     "commands": {
       "hello-dev": {
-        "entry": "./dist/hello.js",
+        "entry": "./hello.js",
         "description": "Example local development command"
       }
     }
