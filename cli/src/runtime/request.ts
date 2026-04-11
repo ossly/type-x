@@ -1,11 +1,6 @@
-export interface CommandRequest {
-  raw: string;
-  argv: string[];
-  args: string[];
-  flags: Record<string, string | boolean>;
-  pwd: string;
-  env: NodeJS.ProcessEnv;
-}
+import type { CommandRequest } from "@type-x/types";
+
+export type { CommandRequest } from "@type-x/types";
 
 export const createRequest = (argv: string[]): CommandRequest => {
   return {

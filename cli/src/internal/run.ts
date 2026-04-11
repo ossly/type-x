@@ -1,4 +1,4 @@
-import type { CommandHandler } from "../runtime/context.js";
+import type { CommandHandler } from "@type-x/types";
 import { executeResolvedCommand } from "../runtime/execute-resolved-command.js";
 import { createRequest } from "../runtime/request.js";
 import { resolveLocalCommand } from "../runtime/resolve-local-command.js";

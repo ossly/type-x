@@ -1,4 +1,4 @@
-import type { CommandHandler } from "../runtime/context.js";
+import type { CommandHandler } from "@type-x/types";
 import { readRegistry } from "../runtime/registry.js";
 import { printAliasTable, type AliasRow } from "./alias-table.js";
 

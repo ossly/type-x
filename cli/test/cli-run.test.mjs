@@ -29,6 +29,7 @@ test("x run executes a local package command", async () => {
   assert.match(result.stdout, /hello from local package/);
   assert.match(result.stdout, /command: hello-dev/);
   assert.match(result.stdout, /@examples\/hello-tools@0.0.0/);
+  assert.match(result.stdout, /runs: 1/);
 });
 
 test("x add installs a package and x remove deletes it", async () => {
@@ -122,8 +123,12 @@ test("x upgrade replaces an installed package version", async () => {
     join(upgradedPackagePath, "dist/hello.js"),
     [
       "export default async function main(context) {",
+      '  const previousRuns = (await context.store.get("runs")) ?? 0;',
+      "  const runs = Number(previousRuns) + 1;",
+      '  await context.store.set("runs", runs);',
       '  context.log.info("hello from upgraded package");',
       "  context.log.info(`package: ${context.command.packageName}@${context.command.version}`);",
+      "  context.log.info(`runs: ${runs}`);",
       "}",
       "",
     ].join("\n"),
@@ -136,6 +141,20 @@ test("x upgrade replaces an installed package version", async () => {
       X_HOME: xHome,
     },
   });
+
+  const initialRunResult = await execFileAsync(
+    "node",
+    [cliEntrypoint, "hello-dev"],
+    {
+      cwd: process.cwd(),
+      env: {
+        ...process.env,
+        X_HOME: xHome,
+      },
+    },
+  );
+
+  assert.match(initialRunResult.stdout, /runs: 1/);
 
   const upgradeResult = await execFileAsync(
     "node",
@@ -165,6 +184,7 @@ test("x upgrade replaces an installed package version", async () => {
 
   assert.match(runResult.stdout, /hello from upgraded package/);
   assert.match(runResult.stdout, /@examples\/hello-tools@0.0.1/);
+  assert.match(runResult.stdout, /runs: 2/);
 });
 
 test("x alias creates an alias that executes the target command and x unalias removes it", async () => {
@@ -315,4 +335,37 @@ test("x setup-shell adds ~/.x/bin to the detected shell rc file", async () => {
   );
 
   assert.match(rcContent, /export PATH="\$HOME\/\.x\/bin:\$PATH"/);
+});
+
+test("command store persists across repeated installed command runs", async () => {
+  const xHome = await mkdtemp(join(tmpdir(), "type-x-cli-store-"));
+  const cliEntrypoint = resolve(process.cwd(), "dist/src/cli.js");
+  const packagePath = resolve(process.cwd(), "../examples/hello-tools");
+
+  await execFileAsync("node", [cliEntrypoint, "add", packagePath], {
+    cwd: process.cwd(),
+    env: {
+      ...process.env,
+      X_HOME: xHome,
+    },
+  });
+
+  const firstRun = await execFileAsync("node", [cliEntrypoint, "hello-dev"], {
+    cwd: process.cwd(),
+    env: {
+      ...process.env,
+      X_HOME: xHome,
+    },
+  });
+
+  const secondRun = await execFileAsync("node", [cliEntrypoint, "hello-dev"], {
+    cwd: process.cwd(),
+    env: {
+      ...process.env,
+      X_HOME: xHome,
+    },
+  });
+
+  assert.match(firstRun.stdout, /runs: 1/);
+  assert.match(secondRun.stdout, /runs: 2/);
 });

@@ -1,4 +1,4 @@
-import type { CommandHandler } from "../runtime/context.js";
+import type { CommandHandler } from "@type-x/types";
 import { unregisterAlias } from "../alias/unregister-alias.js";
 
 export const unalias: CommandHandler = async ({ request }) => {

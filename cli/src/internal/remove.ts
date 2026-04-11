@@ -1,4 +1,4 @@
-import type { CommandHandler } from "../runtime/context.js";
+import type { CommandHandler } from "@type-x/types";
 import { removePackage } from "../install/remove-package.js";
 
 export const remove: CommandHandler = async ({ request }) => {

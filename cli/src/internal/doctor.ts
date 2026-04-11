@@ -1,4 +1,4 @@
-import type { CommandHandler } from "../runtime/context.js";
+import type { CommandHandler } from "@type-x/types";
 import { ensureRuntimeDirs } from "../runtime/paths.js";
 import { readRegistry, writeRegistry } from "../runtime/registry.js";
 

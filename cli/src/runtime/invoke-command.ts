@@ -1,4 +1,4 @@
-import type { CommandContext, CommandHandler } from "./context.js";
+import type { CommandContext, CommandHandler } from "@type-x/types";
 
 export const invokeCommand = async (
   handler: CommandHandler,

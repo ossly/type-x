@@ -1,4 +1,4 @@
-import type { CommandHandler } from "../runtime/context.js";
+import type { CommandHandler } from "@type-x/types";
 import { installPackage } from "../install/install-package.js";
 import { printCommandTable, type CommandRow } from "./command-table.js";
 

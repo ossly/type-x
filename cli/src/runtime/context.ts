@@ -1,25 +1,10 @@
-import type { CommandRequest } from "./request.js";
-
-export interface CommandMetadata {
-  name: string;
-  packageName: string;
-  version: string;
-  aliasUsed?: string;
-}
-
-export interface CommandContext {
-  command: CommandMetadata;
-  request: CommandRequest;
-  log: {
-    info: (...args: unknown[]) => void;
-    warn: (...args: unknown[]) => void;
-    error: (...args: unknown[]) => void;
-  };
-}
-
-export type CommandHandler = (
-  context: CommandContext,
-) => Promise<void> | void;
+import type {
+  CommandContext,
+  CommandHandler,
+  CommandMetadata,
+  CommandRequest,
+} from "@type-x/types";
+import { createCommandStore } from "./command-store.js";
 
 export const createCommandContext = (
   command: CommandMetadata,
@@ -27,6 +12,7 @@ export const createCommandContext = (
 ): CommandContext => ({
   command,
   request,
+  store: createCommandStore(command.packageName, command.name),
   log: {
     info: (...args: unknown[]) => console.log(...args),
     warn: (...args: unknown[]) => console.warn(...args),

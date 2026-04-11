@@ -4,7 +4,11 @@
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": ".",
-    "noEmit": false
+    "noEmit": false,
+    "baseUrl": ".",
+    "paths": {
+      "@type-x/types": ["../packages/types/dist/src/index.d.ts"]
+    }
   },
   "include": ["src/**/*.ts"]
 }

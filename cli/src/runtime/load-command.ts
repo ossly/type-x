@@ -1,6 +1,6 @@
 import { pathToFileURL } from "node:url";
 
-import type { CommandHandler } from "./context.js";
+import type { CommandHandler } from "@type-x/types";
 
 export const loadCommand = async (
   entryFile: string,

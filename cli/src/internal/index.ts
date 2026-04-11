@@ -1,4 +1,4 @@
-import type { CommandHandler } from "../runtime/context.js";
+import type { CommandHandler } from "@type-x/types";
 import { add } from "./add.js";
 import { alias } from "./alias.js";
 import { listAliases } from "./aliases.js";

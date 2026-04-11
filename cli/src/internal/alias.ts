@@ -1,4 +1,4 @@
-import type { CommandHandler } from "../runtime/context.js";
+import type { CommandHandler } from "@type-x/types";
 import { registerAlias } from "../alias/register-alias.js";
 import { getShellSetupMessage } from "../shell/setup-shell.js";
 
