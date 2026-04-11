@@ -24,7 +24,7 @@ export const loadCommand = async (
 
   if (typeof defaultExport !== "function") {
     throw new Error(
-      `Command module "${entryFile}" must export a default function.`,
+      `Command module "${entryFile}" must export a default function, received ${describeExportType(defaultExport)}.`,
     );
   }
 
@@ -33,4 +33,16 @@ export const loadCommand = async (
 
 const getErrorMessage = (error: unknown): string => {
   return error instanceof Error ? error.message : String(error);
+};
+
+const describeExportType = (value: unknown): string => {
+  if (value === undefined) {
+    return "undefined";
+  }
+
+  if (value === null) {
+    return "null";
+  }
+
+  return typeof value;
 };

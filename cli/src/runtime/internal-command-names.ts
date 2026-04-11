@@ -1,5 +1,6 @@
 export const INTERNAL_COMMAND_NAMES = {
   ADD: "add",
+  INIT: "init",
   UPGRADE: "upgrade",
   REMOVE: "remove",
   REMOVE_SHORT: "rm",

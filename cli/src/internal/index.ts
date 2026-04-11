@@ -4,6 +4,7 @@ import { alias } from "./alias.js";
 import { listAliases } from "./aliases.js";
 import { doctor } from "./doctor.js";
 import { help } from "./help.js";
+import { init } from "./init.js";
 import { listCommands } from "./ls.js";
 import { remove } from "./remove.js";
 import { run } from "./run.js";
@@ -23,6 +24,7 @@ export const internalCommands: Record<string, CommandHandler> = {
   [INTERNAL_COMMAND_NAMES.LIST_COMMANDS]: listCommands,
 
   [INTERNAL_COMMAND_NAMES.ADD]: add,
+  [INTERNAL_COMMAND_NAMES.INIT]: init,
 
   [INTERNAL_COMMAND_NAMES.REMOVE]: remove,
   [INTERNAL_COMMAND_NAMES.REMOVE_SHORT]: remove,

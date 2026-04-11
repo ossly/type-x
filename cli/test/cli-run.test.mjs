@@ -52,7 +52,8 @@ test("x run executes the TypeScript example package", async () => {
   assert.match(result.stdout, /command: hello-ts/);
   assert.match(result.stdout, /@examples\/hello-tools-ts@0.0.0/);
   assert.match(result.stdout, /runs: 1/);
-  assert.match(result.stdout, /lastName: itaibo/);
+  assert.match(result.stdout, /name: itaibo/);
+  assert.match(result.stdout, /storedName: itaibo/);
 });
 
 test("x add installs a package and x remove deletes it", async () => {
@@ -396,8 +397,44 @@ test("x --help prints usage and command list", async () => {
   assert.match(result.stdout, /x - installable command runtime/);
   assert.match(result.stdout, /Usage/);
   assert.match(result.stdout, /Internal commands/);
+  assert.match(result.stdout, /init \[path\] \[--ts\]/);
   assert.match(result.stdout, /add <package-name-or-path>/);
   assert.match(result.stdout, /doctor/);
+});
+
+test("x init --ts scaffolds a TypeScript package", async () => {
+  const projectDir = await mkdtemp(join(tmpdir(), "type-x-init-ts-"));
+  const targetDir = join(projectDir, "my-command");
+
+  const result = await execFileAsync(
+    "node",
+    [cliEntrypoint, "init", targetDir, "--ts"],
+    {
+      cwd: process.cwd(),
+      env: process.env,
+    },
+  );
+
+  assert.match(result.stdout, /Initialized TypeScript x package/);
+  assert.match(result.stdout, /pnpm build/);
+  assert.match(result.stdout, /x run \. my-command/);
+
+  const fs = await import("node:fs/promises");
+  const packageJson = JSON.parse(
+    await fs.readFile(join(targetDir, "package.json"), "utf8"),
+  );
+  const tsconfig = JSON.parse(
+    await fs.readFile(join(targetDir, "tsconfig.json"), "utf8"),
+  );
+  const source = await fs.readFile(join(targetDir, "src/index.ts"), "utf8");
+
+  assert.equal(packageJson.name, "my-command");
+  assert.equal(packageJson.x.commands["my-command"].entry, "./dist/src/index.js");
+  assert.equal(packageJson.devDependencies["@type-x/typescript-config"], undefined);
+  assert.equal(tsconfig.extends, undefined);
+  assert.deepEqual(tsconfig.compilerOptions.lib, ["es2022"]);
+  assert.deepEqual(tsconfig.compilerOptions.types, ["node"]);
+  assert.match(source, /CommandContext/);
 });
 
 test("x doctor reports shell and registry status", async () => {

@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import { resolve } from "node:path";
 
 export interface PackageCommandManifest {
@@ -60,36 +60,61 @@ export const readPackageManifest = async (
     );
   }
 
-  if (typeof manifest.name !== "string" || manifest.name.length === 0) {
+  if (typeof manifest.name !== "string" || manifest.name.trim().length === 0) {
     throw new Error(
-      `Package "${resolvedPackagePath}" must define a non-empty name.`,
+      `Invalid package manifest "${packageJsonPath}": expected "name" to be a non-empty string.`,
     );
   }
 
-  if (typeof manifest.version !== "string" || manifest.version.length === 0) {
+  if (
+    typeof manifest.version !== "string" ||
+    manifest.version.trim().length === 0
+  ) {
     throw new Error(
-      `Package "${resolvedPackagePath}" must define a non-empty version.`,
+      `Invalid package manifest "${packageJsonPath}": expected "version" to be a non-empty string.`,
     );
   }
 
-  if (manifest.x?.runtime !== "1") {
+  if (!isRecord(manifest.x)) {
     throw new Error(
-      `Package "${resolvedPackagePath}" must define x.runtime as "1".`,
+      `Invalid package manifest "${packageJsonPath}": expected "x" to be an object.`,
     );
   }
 
-  if (!manifest.x.commands || Object.keys(manifest.x.commands).length === 0) {
+  if (manifest.x.runtime !== "1") {
     throw new Error(
-      `Package "${resolvedPackagePath}" must define at least one x command.`,
+      `Invalid package manifest "${packageJsonPath}": expected "x.runtime" to be "1", received ${describeValue(manifest.x.runtime)}.`,
     );
   }
 
-  const commands = Object.fromEntries(
-    Object.entries(manifest.x.commands).map(([commandName, command]) => [
-      commandName,
-      validateCommandManifest(resolvedPackagePath, commandName, command),
-    ]),
+  if (!isRecord(manifest.x.commands)) {
+    throw new Error(
+      `Invalid package manifest "${packageJsonPath}": expected "x.commands" to be an object.`,
+    );
+  }
+
+  const commandEntries = Object.entries(manifest.x.commands);
+
+  if (commandEntries.length === 0) {
+    throw new Error(
+      `Invalid package manifest "${packageJsonPath}": expected "x.commands" to define at least one command.`,
+    );
+  }
+
+  const validatedCommands = await Promise.all(
+    commandEntries.map(async ([commandName, command]) => {
+      const validatedCommand = await validateCommandManifest(
+        resolvedPackagePath,
+        packageJsonPath,
+        commandName,
+        command,
+      );
+
+      return [commandName, validatedCommand] as const;
+    }),
   );
+
+  const commands = Object.fromEntries(validatedCommands);
 
   return {
     packageName: manifest.name,
@@ -115,23 +140,56 @@ export const getManifestCommand = (
   return command;
 };
 
-const validateCommandManifest = (
+const validateCommandManifest = async (
   packagePath: string,
+  packageJsonPath: string,
   commandName: string,
   command: RawPackageCommandManifest | undefined,
-): PackageCommandManifest => {
-  if (typeof command?.entry !== "string" || command.entry.length === 0) {
+): Promise<PackageCommandManifest> => {
+  if (!isRecord(command)) {
     throw new Error(
-      `Command "${commandName}" in "${packagePath}" must define a non-empty entry.`,
+      `Invalid package manifest "${packageJsonPath}": expected "x.commands.${commandName}" to be an object.`,
+    );
+  }
+
+  if (typeof command.entry !== "string" || command.entry.trim().length === 0) {
+    throw new Error(
+      `Invalid package manifest "${packageJsonPath}": expected "x.commands.${commandName}.entry" to be a non-empty string.`,
     );
   }
 
   if (
     typeof command.description !== "string" ||
-    command.description.length === 0
+    command.description.trim().length === 0
   ) {
     throw new Error(
-      `Command "${commandName}" in "${packagePath}" must define a non-empty description.`,
+      `Invalid package manifest "${packageJsonPath}": expected "x.commands.${commandName}.description" to be a non-empty string.`,
+    );
+  }
+
+  const entryFile = resolve(packagePath, command.entry);
+
+  try {
+    const entryFileStats = await stat(entryFile);
+
+    if (!entryFileStats.isFile()) {
+      throw new Error(
+        `Invalid package manifest "${packageJsonPath}": command "${commandName}" entry "${command.entry}" does not point to a file.`,
+      );
+    }
+  } catch (error: unknown) {
+    if (isMissingFileError(error)) {
+      throw new Error(
+        `Invalid package manifest "${packageJsonPath}": command "${commandName}" entry "${command.entry}" was not found at "${entryFile}".`,
+      );
+    }
+
+    if (error instanceof Error) {
+      throw error;
+    }
+
+    throw new Error(
+      `Invalid package manifest "${packageJsonPath}": failed to inspect command "${commandName}" entry "${command.entry}".`,
     );
   }
 
@@ -139,6 +197,26 @@ const validateCommandManifest = (
     entry: command.entry,
     description: command.description,
   };
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === "object" && value !== null;
+};
+
+const describeValue = (value: unknown): string => {
+  if (typeof value === "string") {
+    return `"${value}"`;
+  }
+
+  if (value === undefined) {
+    return "undefined";
+  }
+
+  return JSON.stringify(value) ?? String(value);
+};
+
+const isMissingFileError = (error: unknown): error is NodeJS.ErrnoException => {
+  return error instanceof Error && "code" in error && error.code === "ENOENT";
 };
 
 const getErrorMessage = (error: unknown): string => {
