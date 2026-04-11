@@ -8,7 +8,7 @@ export const help: CommandHandler = async () => {
   console.log("  x run <package-path> <command-name> [...args]");
   console.log("");
   console.log("Internal commands");
-  console.log("  init [path] [--ts]               Scaffold a new x package");
+  console.log("  init [path] [--ts]              Scaffold a new x package");
   console.log("  add <package-name-or-path>      Install a package");
   console.log("  upgrade <package-name-or-path>  Upgrade an installed package");
   console.log("  remove <package-name>           Remove an installed package");

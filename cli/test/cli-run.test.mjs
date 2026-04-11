@@ -74,6 +74,9 @@ test("x add installs a package and x remove deletes it", async () => {
   );
 
   assert.match(addResult.stdout, /Installed @examples\/hello-tools@0.0.0/);
+  assert.match(addResult.stdout, /\[ \] Installing/);
+  assert.match(addResult.stdout, /\[ \] Packing package:/);
+  assert.match(addResult.stdout, /\[ok\] Installed @examples\/hello-tools@0.0.0/);
   assert.match(addResult.stdout, /COMMAND\s+PACKAGE\s+VERSION\s+DESCRIPTION/);
   assert.match(addResult.stdout, /hello-dev\s+@examples\/hello-tools\s+0.0.0\s+Example local development command/);
 
@@ -100,6 +103,7 @@ test("x add installs a package and x remove deletes it", async () => {
   );
 
   assert.match(removeResult.stdout, /Removed @examples\/hello-tools\./);
+  assert.match(removeResult.stdout, /\[ok\] Removed @examples\/hello-tools/);
 
   const lsAfterRemove = await execFileAsync("node", [cliEntrypoint, "ls"], {
     cwd: process.cwd(),
@@ -192,6 +196,9 @@ test("x upgrade replaces an installed package version", async () => {
   );
 
   assert.match(upgradeResult.stdout, /Upgraded @examples\/hello-tools to 0.0.1/);
+  assert.match(upgradeResult.stdout, /\[ \] Upgrading/);
+  assert.match(upgradeResult.stdout, /\[ \] Replacing installed package:/);
+  assert.match(upgradeResult.stdout, /\[ok\] Upgraded @examples\/hello-tools to 0.0.1/);
 
   const runResult = await execFileAsync(
     "node",
