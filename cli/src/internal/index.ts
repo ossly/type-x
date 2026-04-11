@@ -4,6 +4,7 @@ import { doctor } from "./doctor.js";
 import { listCommands } from "./ls.js";
 import { remove } from "./remove.js";
 import { run } from "./run.js";
+import { upgrade } from "./upgrade.js";
 
 export const internalCommands: Record<string, CommandHandler> = {
   "--help": () => console.log("help"),
@@ -19,7 +20,7 @@ export const internalCommands: Record<string, CommandHandler> = {
   remove: remove,
   rm: remove,
 
-  upgrade: () => console.log("upgrade"),
+  upgrade: upgrade,
 
   alias: () => console.log("alias"),
   unalias: () => console.log("unalias"),

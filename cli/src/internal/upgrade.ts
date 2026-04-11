@@ -1,20 +1,20 @@
 import type { CommandHandler } from "../runtime/context.js";
 import { installPackage } from "../install/install-package.js";
 
-export const add: CommandHandler = async ({ request }) => {
+export const upgrade: CommandHandler = async ({ request }) => {
   const [, rawSpecifier] = request.argv;
 
   if (!rawSpecifier) {
-    throw new Error("Usage: x add <package-name-or-path>");
+    throw new Error("Usage: x upgrade <package-name-or-path>");
   }
 
   const manifest = await installPackage({
     rawSpecifier,
     cwd: request.pwd,
-    mode: "add",
+    mode: "upgrade",
   });
 
   console.log(
-    `Installed ${manifest.packageName}@${manifest.packageVersion} with ${Object.keys(manifest.commands).length} command(s).`,
+    `Upgraded ${manifest.packageName} to ${manifest.packageVersion} with ${Object.keys(manifest.commands).length} command(s).`,
   );
 };
