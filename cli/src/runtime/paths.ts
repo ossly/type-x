@@ -1,6 +1,6 @@
-import { mkdir } from 'node:fs/promises';
-import { homedir } from 'node:os';
-import { join } from 'node:path';
+import { mkdir } from "node:fs/promises";
+import { homedir } from "node:os";
+import { join } from "node:path";
 
 export interface RuntimePaths {
   homeDir: string;
@@ -12,15 +12,15 @@ export interface RuntimePaths {
 }
 
 export const getRuntimePaths = (): RuntimePaths => {
-  const homeDir = process.env.X_HOME ?? join(homedir(), '.x');
+  const homeDir = process.env.X_HOME ?? join(homedir(), ".x");
 
   return {
     homeDir,
-    registryFile: join(homeDir, 'registry.json'),
-    packagesDir: join(homeDir, 'packages'),
-    storesDir: join(homeDir, 'stores'),
-    binDir: join(homeDir, 'bin'),
-    tmpDir: join(homeDir, 'tmp'),
+    registryFile: join(homeDir, "registry.json"),
+    packagesDir: join(homeDir, "packages"),
+    storesDir: join(homeDir, "stores"),
+    binDir: join(homeDir, "bin"),
+    tmpDir: join(homeDir, "tmp"),
   };
 };
 

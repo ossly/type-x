@@ -1,4 +1,4 @@
-import { readRegistry } from '../runtime/registry.js';
+import { readRegistry } from "../runtime/registry.js";
 
 interface CommandRow {
   command: string;
@@ -20,30 +20,30 @@ export const listCommands = async (): Promise<void> => {
     .sort((left, right) => left.command.localeCompare(right.command));
 
   if (rows.length === 0) {
-    console.log('No installed commands.');
+    console.log("No installed commands.");
     return;
   }
 
   const commandWidth = getColumnWidth(
-    'COMMAND',
+    "COMMAND",
     rows.map((row) => row.command),
   );
   const packageWidth = getColumnWidth(
-    'PACKAGE',
+    "PACKAGE",
     rows.map((row) => row.packageName),
   );
   const versionWidth = getColumnWidth(
-    'VERSION',
+    "VERSION",
     rows.map((row) => row.version),
   );
 
   console.log(
     [
-      'COMMAND'.padEnd(commandWidth),
-      'PACKAGE'.padEnd(packageWidth),
-      'VERSION'.padEnd(versionWidth),
-      'DESCRIPTION',
-    ].join('  '),
+      "COMMAND".padEnd(commandWidth),
+      "PACKAGE".padEnd(packageWidth),
+      "VERSION".padEnd(versionWidth),
+      "DESCRIPTION",
+    ].join("  "),
   );
 
   for (const row of rows) {
@@ -53,11 +53,14 @@ export const listCommands = async (): Promise<void> => {
         row.packageName.padEnd(packageWidth),
         row.version.padEnd(versionWidth),
         row.description,
-      ].join('  '),
+      ].join("  "),
     );
   }
 };
 
 const getColumnWidth = (header: string, values: string[]): number => {
-  return values.reduce((width, value) => Math.max(width, value.length), header.length);
+  return values.reduce(
+    (width, value) => Math.max(width, value.length),
+    header.length,
+  );
 };

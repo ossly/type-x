@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-import { internalCommands } from './internal/index.js';
-import { readRegistry } from './runtime/registry.js';
+import { internalCommands } from "./internal/index.js";
+import { readRegistry } from "./runtime/registry.js";
 
 const main = async (argv: string[]) => {
-  const command = argv[0] ?? '--help';
+  const command = argv[0] ?? "--help";
 
   if (command in internalCommands) {
     return internalCommands[command as keyof typeof internalCommands]();

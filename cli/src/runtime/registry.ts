@@ -1,6 +1,6 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from "node:fs/promises";
 
-import { ensureRuntimeDirs, getRuntimePaths } from './paths.js';
+import { ensureRuntimeDirs, getRuntimePaths } from "./paths.js";
 
 export interface RegistryPackage {
   name: string;
@@ -38,7 +38,7 @@ export const readRegistry = async (): Promise<Registry> => {
   const { registryFile } = getRuntimePaths();
 
   try {
-    const content = await readFile(registryFile, 'utf8');
+    const content = await readFile(registryFile, "utf8");
     const parsed = JSON.parse(content) as Partial<Registry>;
 
     return {
@@ -60,11 +60,9 @@ export const writeRegistry = async (registry: Registry): Promise<void> => {
   const { registryFile } = await ensureRuntimeDirs();
   const content = JSON.stringify(registry, null, 2);
 
-  await writeFile(registryFile, `${content}\n`, 'utf8');
+  await writeFile(registryFile, `${content}\n`, "utf8");
 };
 
-const isMissingFileError = (
-  error: unknown,
-): error is NodeJS.ErrnoException => {
-  return error instanceof Error && 'code' in error && error.code === 'ENOENT';
+const isMissingFileError = (error: unknown): error is NodeJS.ErrnoException => {
+  return error instanceof Error && "code" in error && error.code === "ENOENT";
 };

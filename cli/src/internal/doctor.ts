@@ -1,5 +1,5 @@
-import { ensureRuntimeDirs } from '../runtime/paths.js';
-import { readRegistry, writeRegistry } from '../runtime/registry.js';
+import { ensureRuntimeDirs } from "../runtime/paths.js";
+import { readRegistry, writeRegistry } from "../runtime/registry.js";
 
 export const doctor = async (): Promise<void> => {
   const paths = await ensureRuntimeDirs();
