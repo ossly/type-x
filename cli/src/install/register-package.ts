@@ -2,7 +2,7 @@ import { cp, rm } from "node:fs/promises";
 import { join } from "node:path";
 
 import type { PackageManifest } from "../runtime/manifest.js";
-import { INTERNAL_COMMAND_NAMES } from "../runtime/internal-command-names.js";
+import { INTERNAL_COMMAND_NAME_SET } from "../runtime/internal-command-names.js";
 import {
   readRegistry,
   writeRegistry,
@@ -118,7 +118,7 @@ const assertPackageCanBeInstalled = (
   }
 
   for (const commandName of Object.keys(manifest.commands)) {
-    if (INTERNAL_COMMAND_NAMES.has(commandName)) {
+    if (INTERNAL_COMMAND_NAME_SET.has(commandName)) {
       throw new Error(
         `Command "${commandName}" conflicts with an internal x command.`,
       );
@@ -157,7 +157,7 @@ const assertPackageCanReplace = (
   }
 
   for (const commandName of Object.keys(manifest.commands)) {
-    if (INTERNAL_COMMAND_NAMES.has(commandName)) {
+    if (INTERNAL_COMMAND_NAME_SET.has(commandName)) {
       throw new Error(
         `Command "${commandName}" conflicts with an internal x command.`,
       );

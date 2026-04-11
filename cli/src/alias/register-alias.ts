@@ -1,5 +1,5 @@
 import { readRegistry, writeRegistry } from "../runtime/registry.js";
-import { INTERNAL_COMMAND_NAMES } from "../runtime/internal-command-names.js";
+import { INTERNAL_COMMAND_NAME_SET } from "../runtime/internal-command-names.js";
 import { getAliasShimPath, hasSystemCommand, writeAliasShim } from "./alias-shim.js";
 
 export const registerAlias = async (
@@ -12,7 +12,7 @@ export const registerAlias = async (
     throw new Error("Alias name cannot be empty.");
   }
 
-  if (INTERNAL_COMMAND_NAMES.has(aliasName)) {
+  if (INTERNAL_COMMAND_NAME_SET.has(aliasName)) {
     throw new Error(`Alias "${aliasName}" conflicts with an internal x command.`);
   }
 

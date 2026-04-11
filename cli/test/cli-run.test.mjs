@@ -8,10 +8,10 @@ import { tmpdir } from "node:os";
 import process from "node:process";
 
 const execFileAsync = promisify(execFile);
+const cliEntrypoint = resolve(process.cwd(), "dist/src/cli.js");
 
 test("x run executes a local package command", async () => {
   const xHome = await mkdtemp(join(tmpdir(), "type-x-cli-run-"));
-  const cliEntrypoint = resolve(process.cwd(), "dist/src/cli.js");
   const packagePath = resolve(process.cwd(), "../examples/hello-tools");
 
   const result = await execFileAsync(
@@ -34,7 +34,6 @@ test("x run executes a local package command", async () => {
 
 test("x add installs a package and x remove deletes it", async () => {
   const xHome = await mkdtemp(join(tmpdir(), "type-x-cli-add-remove-"));
-  const cliEntrypoint = resolve(process.cwd(), "dist/src/cli.js");
   const packagePath = resolve(process.cwd(), "../examples/hello-tools");
 
   const addResult = await execFileAsync(
@@ -90,7 +89,6 @@ test("x add installs a package and x remove deletes it", async () => {
 
 test("x upgrade replaces an installed package version", async () => {
   const xHome = await mkdtemp(join(tmpdir(), "type-x-cli-upgrade-"));
-  const cliEntrypoint = resolve(process.cwd(), "dist/src/cli.js");
   const originalPackagePath = resolve(process.cwd(), "../examples/hello-tools");
   const upgradedPackageRoot = await mkdtemp(
     join(tmpdir(), "type-x-upgrade-package-"),
@@ -189,7 +187,6 @@ test("x upgrade replaces an installed package version", async () => {
 
 test("x alias creates an alias that executes the target command and x unalias removes it", async () => {
   const xHome = await mkdtemp(join(tmpdir(), "type-x-cli-alias-"));
-  const cliEntrypoint = resolve(process.cwd(), "dist/src/cli.js");
   const packagePath = resolve(process.cwd(), "../examples/hello-tools");
 
   await execFileAsync("node", [cliEntrypoint, "add", packagePath], {
@@ -270,7 +267,6 @@ test("x alias creates an alias that executes the target command and x unalias re
 
 test("x alias allows exposing an installed command under the same global name", async () => {
   const xHome = await mkdtemp(join(tmpdir(), "type-x-cli-alias-same-name-"));
-  const cliEntrypoint = resolve(process.cwd(), "dist/src/cli.js");
   const packagePath = resolve(process.cwd(), "../examples/hello-tools");
 
   await execFileAsync("node", [cliEntrypoint, "add", packagePath], {
@@ -314,7 +310,6 @@ test("x alias allows exposing an installed command under the same global name", 
 test("x setup-shell adds ~/.x/bin to the detected shell rc file", async () => {
   const homeDir = await mkdtemp(join(tmpdir(), "type-x-shell-home-"));
   const xHome = join(homeDir, ".x");
-  const cliEntrypoint = resolve(process.cwd(), "dist/src/cli.js");
   const rcFile = join(homeDir, ".zshrc");
 
   const result = await execFileAsync("node", [cliEntrypoint, "setup-shell"], {
@@ -339,7 +334,6 @@ test("x setup-shell adds ~/.x/bin to the detected shell rc file", async () => {
 
 test("command store persists across repeated installed command runs", async () => {
   const xHome = await mkdtemp(join(tmpdir(), "type-x-cli-store-"));
-  const cliEntrypoint = resolve(process.cwd(), "dist/src/cli.js");
   const packagePath = resolve(process.cwd(), "../examples/hello-tools");
 
   await execFileAsync("node", [cliEntrypoint, "add", packagePath], {
@@ -368,4 +362,52 @@ test("command store persists across repeated installed command runs", async () =
 
   assert.match(firstRun.stdout, /runs: 1/);
   assert.match(secondRun.stdout, /runs: 2/);
+});
+
+test("x --help prints usage and command list", async () => {
+  const result = await execFileAsync("node", [cliEntrypoint, "--help"], {
+    cwd: process.cwd(),
+    env: process.env,
+  });
+
+  assert.match(result.stdout, /x - installable command runtime/);
+  assert.match(result.stdout, /Usage/);
+  assert.match(result.stdout, /Internal commands/);
+  assert.match(result.stdout, /add <package-name-or-path>/);
+  assert.match(result.stdout, /doctor/);
+});
+
+test("x doctor reports shell and registry status", async () => {
+  const homeDir = await mkdtemp(join(tmpdir(), "type-x-cli-doctor-home-"));
+  const xHome = join(homeDir, ".x");
+  const packagePath = resolve(process.cwd(), "../examples/hello-tools");
+
+  await execFileAsync("node", [cliEntrypoint, "add", packagePath], {
+    cwd: process.cwd(),
+    env: {
+      ...process.env,
+      HOME: homeDir,
+      SHELL: "/bin/zsh",
+      PATH: process.env.PATH,
+      X_HOME: xHome,
+    },
+  });
+
+  const result = await execFileAsync("node", [cliEntrypoint, "doctor"], {
+    cwd: process.cwd(),
+    env: {
+      ...process.env,
+      HOME: homeDir,
+      SHELL: "/bin/zsh",
+      PATH: process.env.PATH,
+      X_HOME: xHome,
+    },
+  });
+
+  assert.match(result.stdout, /Paths/);
+  assert.match(result.stdout, /Shell/);
+  assert.match(result.stdout, /Registry/);
+  assert.match(result.stdout, /packages: 1/);
+  assert.match(result.stdout, /commands: 1/);
+  assert.match(result.stdout, /aliases: 0/);
 });

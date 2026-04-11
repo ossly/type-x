@@ -5,11 +5,12 @@ import { executeCommand } from "./runtime/execute-command.js";
 import { executeResolvedCommand } from "./runtime/execute-resolved-command.js";
 import { createRequest } from "./runtime/request.js";
 import { readRegistry } from "./runtime/registry.js";
+import { INTERNAL_COMMAND_NAMES } from "./runtime/internal-command-names.js";
 import { resolveCommand } from "./runtime/resolve-command.js";
 
 const main = async (argv: string[]): Promise<void> => {
   const request = createRequest(argv);
-  const command = argv[0] ?? "--help";
+  const command = argv[0] ?? INTERNAL_COMMAND_NAMES.HELP;
   const internalCommand = internalCommands[command];
 
   if (internalCommand) {
@@ -34,17 +35,21 @@ const main = async (argv: string[]): Promise<void> => {
   const alias = registry.aliases[command];
 
   if (alias) {
-    const aliasCommand = internalCommands["run-alias"];
+    const aliasCommand = internalCommands[INTERNAL_COMMAND_NAMES.RUN_ALIAS];
 
     if (!aliasCommand) {
       throw new Error("Internal alias runner is not available.");
     }
 
-    const aliasRequest = createRequest(["run-alias", command, ...argv.slice(1)]);
+    const aliasRequest = createRequest([
+      INTERNAL_COMMAND_NAMES.RUN_ALIAS,
+      command,
+      ...argv.slice(1),
+    ]);
 
     return executeCommand({
       command: {
-        name: "run-alias",
+        name: INTERNAL_COMMAND_NAMES.RUN_ALIAS,
         packageName: "@type-x/cli",
         version: "0.0.0",
       },

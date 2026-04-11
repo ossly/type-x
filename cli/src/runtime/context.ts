@@ -1,6 +1,5 @@
 import type {
   CommandContext,
-  CommandHandler,
   CommandMetadata,
   CommandRequest,
 } from "@type-x/types";
