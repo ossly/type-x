@@ -23,6 +23,9 @@ importers:
       '@type-x/eslint-config':
         specifier: workspace:*
         version: link:../packages/eslint-config
+      '@type-x/types':
+        specifier: workspace:*
+        version: link:../packages/types
       '@type-x/typescript-config':
         specifier: workspace:*
         version: link:../packages/typescript-config
@@ -35,6 +38,17 @@ importers:
       typescript:
         specifier: 5.9.2
         version: 5.9.2
+
+  examples/hello-tools: {}
+
+  examples/hello-tools-ts:
+    devDependencies:
+      '@type-x/types':
+        specifier: workspace:*
+        version: link:../../packages/types
+      '@type-x/typescript-config':
+        specifier: workspace:*
+        version: link:../../packages/typescript-config
 
   packages/eslint-config:
     devDependencies:
@@ -59,6 +73,18 @@ importers:
       typescript-eslint:
         specifier: ^8.50.0
         version: 8.58.1(eslint@9.39.4)(typescript@5.9.2)
+
+  packages/types:
+    devDependencies:
+      '@types/node':
+        specifier: ^25.6.0
+        version: 25.6.0
+      eslint:
+        specifier: ^9.39.1
+        version: 9.39.4
+      typescript:
+        specifier: 5.9.2
+        version: 5.9.2
 
   packages/typescript-config: {}
 

@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "@type-x/typescript-config/base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": ".",
+    "noEmit": false
+  },
+  "include": ["src/**/*.ts"]
+}

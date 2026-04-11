@@ -32,6 +32,29 @@ test("x run executes a local package command", async () => {
   assert.match(result.stdout, /runs: 1/);
 });
 
+test("x run executes the TypeScript example package", async () => {
+  const xHome = await mkdtemp(join(tmpdir(), "type-x-cli-run-ts-"));
+  const packagePath = resolve(process.cwd(), "../examples/hello-tools-ts");
+
+  const result = await execFileAsync(
+    "node",
+    [cliEntrypoint, "run", packagePath, "hello-ts", "--name", "itaibo"],
+    {
+      cwd: process.cwd(),
+      env: {
+        ...process.env,
+        X_HOME: xHome,
+      },
+    },
+  );
+
+  assert.match(result.stdout, /hello from typed package/);
+  assert.match(result.stdout, /command: hello-ts/);
+  assert.match(result.stdout, /@examples\/hello-tools-ts@0.0.0/);
+  assert.match(result.stdout, /runs: 1/);
+  assert.match(result.stdout, /lastName: itaibo/);
+});
+
 test("x add installs a package and x remove deletes it", async () => {
   const xHome = await mkdtemp(join(tmpdir(), "type-x-cli-add-remove-"));
   const packagePath = resolve(process.cwd(), "../examples/hello-tools");

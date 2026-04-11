@@ -1,0 +1,18 @@
+{
+  "name": "@examples/hello-tools-ts",
+  "version": "0.0.0",
+  "type": "module",
+  "devDependencies": {
+    "@type-x/types": "workspace:*",
+    "@type-x/typescript-config": "workspace:*"
+  },
+  "x": {
+    "runtime": "1",
+    "commands": {
+      "hello-ts": {
+        "entry": "./dist/hello.js",
+        "description": "Example TypeScript command using @type-x/types"
+      }
+    }
+  }
+}
