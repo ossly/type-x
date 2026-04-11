@@ -1,4 +1,5 @@
 import { doctor } from './doctor.js';
+import { listCommands } from './ls.js';
 
 export const internalCommands = {
   '--help': () => console.log('help'),
@@ -7,7 +8,7 @@ export const internalCommands = {
   '--version': () => console.log('version'),
   '-v': () => console.log('version'),
 
-  'ls': () => console.log('ls'),
+  'ls': listCommands,
 
   'add': () => console.log('add'),
 
