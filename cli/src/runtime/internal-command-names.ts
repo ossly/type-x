@@ -1,0 +1,17 @@
+export const INTERNAL_COMMAND_NAMES = new Set([
+  "add",
+  "upgrade",
+  "remove",
+  "ls",
+  "alias",
+  "unalias",
+  "run",
+  "doctor",
+  "run-alias",
+  "setup-shell",
+  "--help",
+  "-h",
+  "--version",
+  "-v",
+  "rm",
+]);

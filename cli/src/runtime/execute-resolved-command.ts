@@ -6,6 +6,7 @@ import type { ResolvedCommand } from "./resolve-command.js";
 export const executeResolvedCommand = async (
   resolvedCommand: ResolvedCommand,
   request: CommandRequest,
+  aliasUsed?: string,
 ): Promise<void> => {
   const handler = await loadCommand(resolvedCommand.entryFile);
  
@@ -14,6 +15,7 @@ export const executeResolvedCommand = async (
       name: resolvedCommand.commandName,
       packageName: resolvedCommand.packageName,
       version: resolvedCommand.packageVersion,
+      aliasUsed,
     },
     handler,
     request,

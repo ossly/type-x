@@ -164,3 +164,95 @@ test("x upgrade replaces an installed package version", async () => {
   assert.match(runResult.stdout, /hello from upgraded package/);
   assert.match(runResult.stdout, /@examples\/hello-tools@0.0.1/);
 });
+
+test("x alias creates an alias that executes the target command and x unalias removes it", async () => {
+  const xHome = await mkdtemp(join(tmpdir(), "type-x-cli-alias-"));
+  const cliEntrypoint = resolve(process.cwd(), "dist/src/cli.js");
+  const packagePath = resolve(process.cwd(), "../examples/hello-tools");
+
+  await execFileAsync("node", [cliEntrypoint, "add", packagePath], {
+    cwd: process.cwd(),
+    env: {
+      ...process.env,
+      X_HOME: xHome,
+    },
+  });
+
+  const aliasResult = await execFileAsync(
+    "node",
+    [cliEntrypoint, "alias", "hi=hello-dev"],
+    {
+      cwd: process.cwd(),
+      env: {
+        ...process.env,
+        X_HOME: xHome,
+      },
+    },
+  );
+
+  assert.match(aliasResult.stdout, /Created alias hi -> hello-dev\./);
+  assert.match(aliasResult.stdout, /Run "x setup-shell" to add it to/);
+
+  const aliasRunResult = await execFileAsync("node", [cliEntrypoint, "hi"], {
+    cwd: process.cwd(),
+    env: {
+      ...process.env,
+      X_HOME: xHome,
+    },
+  });
+
+  assert.match(aliasRunResult.stdout, /hello from local package/);
+  assert.match(aliasRunResult.stdout, /command: hello-dev/);
+
+  const unaliasResult = await execFileAsync(
+    "node",
+    [cliEntrypoint, "unalias", "hi"],
+    {
+      cwd: process.cwd(),
+      env: {
+        ...process.env,
+        X_HOME: xHome,
+      },
+    },
+  );
+
+  assert.match(unaliasResult.stdout, /Removed alias hi\./);
+
+  await assert.rejects(
+    () =>
+      execFileAsync("node", [cliEntrypoint, "hi"], {
+        cwd: process.cwd(),
+        env: {
+          ...process.env,
+          X_HOME: xHome,
+        },
+      }),
+    /Command not found: hi/,
+  );
+});
+
+test("x setup-shell adds ~/.x/bin to the detected shell rc file", async () => {
+  const homeDir = await mkdtemp(join(tmpdir(), "type-x-shell-home-"));
+  const xHome = join(homeDir, ".x");
+  const cliEntrypoint = resolve(process.cwd(), "dist/src/cli.js");
+  const rcFile = join(homeDir, ".zshrc");
+
+  const result = await execFileAsync("node", [cliEntrypoint, "setup-shell"], {
+    cwd: process.cwd(),
+    env: {
+      ...process.env,
+      HOME: homeDir,
+      SHELL: "/bin/zsh",
+      PATH: process.env.PATH,
+      X_HOME: xHome,
+    },
+  });
+
+  assert.match(result.stdout, /Added .*\.x\/bin to PATH in .*\.zshrc\./);
+
+  const rcContent = await import("node:fs/promises").then(({ readFile }) =>
+    readFile(rcFile, "utf8"),
+  );
+
+  assert.match(rcContent, /export PATH="\$HOME\/\.x\/bin:\$PATH"/);
+});

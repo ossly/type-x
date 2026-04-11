@@ -1,9 +1,13 @@
 import type { CommandHandler } from "../runtime/context.js";
 import { add } from "./add.js";
+import { alias } from "./alias.js";
 import { doctor } from "./doctor.js";
 import { listCommands } from "./ls.js";
 import { remove } from "./remove.js";
 import { run } from "./run.js";
+import { runAlias } from "./run-alias.js";
+import { setupShell } from "./setup-shell.js";
+import { unalias } from "./unalias.js";
 import { upgrade } from "./upgrade.js";
 
 export const internalCommands: Record<string, CommandHandler> = {
@@ -22,9 +26,11 @@ export const internalCommands: Record<string, CommandHandler> = {
 
   upgrade: upgrade,
 
-  alias: () => console.log("alias"),
-  unalias: () => console.log("unalias"),
+  alias: alias,
+  unalias: unalias,
 
   doctor: doctor,
   run: run,
+  "run-alias": runAlias,
+  "setup-shell": setupShell,
 };

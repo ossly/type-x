@@ -2,6 +2,7 @@ import { cp, rm } from "node:fs/promises";
 import { join } from "node:path";
 
 import type { PackageManifest } from "../runtime/manifest.js";
+import { INTERNAL_COMMAND_NAMES } from "../runtime/internal-command-names.js";
 import {
   readRegistry,
   writeRegistry,
@@ -10,23 +11,6 @@ import {
   type RegistryPackage,
 } from "../runtime/registry.js";
 import { ensureRuntimeDirs } from "../runtime/paths.js";
-
-const INTERNAL_COMMAND_NAMES = new Set([
-  "add",
-  "upgrade",
-  "remove",
-  "ls",
-  "alias",
-  "unalias",
-  "run",
-  "doctor",
-  "run-alias",
-  "--help",
-  "-h",
-  "--version",
-  "-v",
-  "rm",
-]);
 
 export const registerPackageInstall = async (
   manifest: PackageManifest,
