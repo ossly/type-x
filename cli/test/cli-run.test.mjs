@@ -6,6 +6,7 @@ import { mkdtemp, mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import process from "node:process";
+import { readFile } from "node:fs/promises";
 
 const execFileAsync = promisify(execFile);
 const cliEntrypoint = resolve(process.cwd(), "dist/src/cli.js");
@@ -400,6 +401,19 @@ test("x --help prints usage and command list", async () => {
   assert.match(result.stdout, /init \[path\] \[--ts\]/);
   assert.match(result.stdout, /add <package-name-or-path>/);
   assert.match(result.stdout, /doctor/);
+});
+
+test("x --version prints the cli package version", async () => {
+  const packageJson = JSON.parse(
+    await readFile(resolve(process.cwd(), "package.json"), "utf8"),
+  );
+
+  const result = await execFileAsync("node", [cliEntrypoint, "--version"], {
+    cwd: process.cwd(),
+    env: process.env,
+  });
+
+  assert.equal(result.stdout.trim(), packageJson.version);
 });
 
 test("x init --ts scaffolds a TypeScript package", async () => {

@@ -12,14 +12,15 @@ import { runAlias } from "./run-alias.js";
 import { setupShell } from "./setup-shell.js";
 import { unalias } from "./unalias.js";
 import { upgrade } from "./upgrade.js";
+import { version } from "./version.js";
 import { INTERNAL_COMMAND_NAMES } from "../runtime/internal-command-names.js";
 
 export const internalCommands: Record<string, CommandHandler> = {
   [INTERNAL_COMMAND_NAMES.HELP]: help,
   [INTERNAL_COMMAND_NAMES.HELP_SHORT]: help,
 
-  [INTERNAL_COMMAND_NAMES.VERSION]: () => console.log("0.0.0"),
-  [INTERNAL_COMMAND_NAMES.VERSION_SHORT]: () => console.log("0.0.0"),
+  [INTERNAL_COMMAND_NAMES.VERSION]: version,
+  [INTERNAL_COMMAND_NAMES.VERSION_SHORT]: version,
 
   [INTERNAL_COMMAND_NAMES.LIST_COMMANDS]: listCommands,
 
