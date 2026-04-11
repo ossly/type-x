@@ -31,7 +31,7 @@ const main = async (argv: string[]): Promise<void> => {
     return executeResolvedCommand(resolvedCommand, request);
   }
 
-  throw new Error(`External command not found: ${command}`);
+  throw new Error(`Command not found: ${command}`);
 };
 
 main(process.argv.slice(2)).catch((error: unknown) => {
