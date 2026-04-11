@@ -1,5 +1,8 @@
 import type { CommandHandler } from "@type-x/types";
-import { ensureShellPathSetup, getShellSetupSuggestion } from "../shell/setup-shell.js";
+import {
+  ensureShellPathSetup,
+  getShellSetupSuggestion,
+} from "../shell/setup-shell.js";
 
 export const setupShell: CommandHandler = async () => {
   const suggestion = getShellSetupSuggestion();

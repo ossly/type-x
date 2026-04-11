@@ -4,6 +4,8 @@ import type {
   CommandRequest,
 } from "@type-x/types";
 import { createCommandStore } from "./command-store.js";
+import { createCommandExec } from "./exec.js";
+import { createCommandUi } from "./ui.js";
 
 export const createCommandContext = (
   command: CommandMetadata,
@@ -17,4 +19,9 @@ export const createCommandContext = (
     warn: (...args: unknown[]) => console.warn(...args),
     error: (...args: unknown[]) => console.error(...args),
   },
+  ui: createCommandUi(),
+  exec: createCommandExec({
+    cwd: request.pwd,
+    env: request.env,
+  }),
 });

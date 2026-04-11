@@ -48,9 +48,8 @@ export const ensureShellPathSetup = async (): Promise<ShellSetupSuggestion> => {
   }
 
   if (!currentContent.includes(suggestion.exportLine)) {
-    const prefix = currentContent.length > 0 && !currentContent.endsWith("\n")
-      ? "\n"
-      : "";
+    const prefix =
+      currentContent.length > 0 && !currentContent.endsWith("\n") ? "\n" : "";
 
     await writeFile(
       suggestion.rcFile,

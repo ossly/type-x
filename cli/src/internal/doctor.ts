@@ -34,7 +34,9 @@ export const doctor: CommandHandler = async ({ request }) => {
   console.log("");
   console.log("Shell");
   console.log(`  shell: ${shellSetup.shellName}`);
-  console.log(`  rcFile: ${shellSetup.rcFile ?? "not supported automatically"}`);
+  console.log(
+    `  rcFile: ${shellSetup.rcFile ?? "not supported automatically"}`,
+  );
   console.log(`  pathConfigured: ${shellSetup.pathConfigured ? "yes" : "no"}`);
   if (!shellSetup.pathConfigured) {
     console.log(`  exportLine: ${shellSetup.exportLine}`);

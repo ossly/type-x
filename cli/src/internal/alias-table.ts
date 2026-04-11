@@ -19,18 +19,14 @@ export const printAliasTable = (rows: AliasRow[]): void => {
   );
 
   console.log(
-    [
-      "ALIAS".padEnd(aliasWidth),
-      "COMMAND".padEnd(commandWidth),
-    ].join("  "),
+    ["ALIAS".padEnd(aliasWidth), "COMMAND".padEnd(commandWidth)].join("  "),
   );
 
   for (const row of rows) {
     console.log(
-      [
-        row.alias.padEnd(aliasWidth),
-        row.command.padEnd(commandWidth),
-      ].join("  "),
+      [row.alias.padEnd(aliasWidth), row.command.padEnd(commandWidth)].join(
+        "  ",
+      ),
     );
   }
 };

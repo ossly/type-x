@@ -165,7 +165,10 @@ const assertPackageCanReplace = (
 
     const existingCommand = registry.commands[commandName];
 
-    if (existingCommand && existingCommand.packageName !== manifest.packageName) {
+    if (
+      existingCommand &&
+      existingCommand.packageName !== manifest.packageName
+    ) {
       throw new Error(
         `Command "${commandName}" is already registered by package "${existingCommand.packageName}".`,
       );

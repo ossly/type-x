@@ -3,8 +3,9 @@
   "extends": "@type-x/typescript-config/base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": ".",
-    "noEmit": false
+    "rootDir": "src",
+    "noEmit": false,
+    "types": ["node"]
   },
   "include": ["src/**/*.ts"]
 }

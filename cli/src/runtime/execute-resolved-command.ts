@@ -9,7 +9,7 @@ export const executeResolvedCommand = async (
   aliasUsed?: string,
 ): Promise<void> => {
   const handler = await loadCommand(resolvedCommand.entryFile);
- 
+
   await executeCommand({
     command: {
       name: resolvedCommand.commandName,

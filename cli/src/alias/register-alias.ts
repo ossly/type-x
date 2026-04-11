@@ -1,6 +1,10 @@
 import { readRegistry, writeRegistry } from "../runtime/registry.js";
 import { INTERNAL_COMMAND_NAME_SET } from "../runtime/internal-command-names.js";
-import { getAliasShimPath, hasSystemCommand, writeAliasShim } from "./alias-shim.js";
+import {
+  getAliasShimPath,
+  hasSystemCommand,
+  writeAliasShim,
+} from "./alias-shim.js";
 
 export const registerAlias = async (
   aliasName: string,
@@ -13,7 +17,9 @@ export const registerAlias = async (
   }
 
   if (INTERNAL_COMMAND_NAME_SET.has(aliasName)) {
-    throw new Error(`Alias "${aliasName}" conflicts with an internal x command.`);
+    throw new Error(
+      `Alias "${aliasName}" conflicts with an internal x command.`,
+    );
   }
 
   if (!registry.commands[targetCommand]) {
@@ -29,7 +35,9 @@ export const registerAlias = async (
   }
 
   if (await hasSystemCommand(aliasName)) {
-    throw new Error(`Alias "${aliasName}" conflicts with an existing command in PATH.`);
+    throw new Error(
+      `Alias "${aliasName}" conflicts with an existing command in PATH.`,
+    );
   }
 
   registry.aliases[aliasName] = {

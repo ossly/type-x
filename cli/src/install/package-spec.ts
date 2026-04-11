@@ -5,10 +5,7 @@ export interface PackageSpec {
   source: string;
 }
 
-export const parsePackageSpec = (
-  raw: string,
-  cwd: string,
-): PackageSpec => {
+export const parsePackageSpec = (raw: string, cwd: string): PackageSpec => {
   const isLocalPath =
     raw.startsWith(".") || raw.startsWith("/") || raw.startsWith("..");
 

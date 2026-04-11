@@ -31,6 +31,39 @@ export interface CommandLog {
   error: (...args: unknown[]) => void;
 }
 
+export interface CommandUi {
+  confirm(message: string): Promise<boolean>;
+  input(message: string): Promise<string>;
+  task(message: string): CommandTask;
+}
+
+export interface CommandTask {
+  update(message: string): void;
+  done(message?: string): void;
+  fail(message?: string): void;
+}
+
+export interface CommandExecOptions {
+  cwd?: string;
+  env?: Record<string, string | undefined>;
+  input?: string;
+  rejectOnNonZero?: boolean;
+}
+
+export interface CommandExecResult {
+  exitCode: number;
+  stdout: string;
+  stderr: string;
+}
+
+export interface CommandExec {
+  (
+    command: string,
+    args?: string[],
+    options?: CommandExecOptions,
+  ): Promise<CommandExecResult>;
+}
+
 export interface CommandContext<
   TStore extends Record<string, unknown> = Record<string, unknown>,
 > {
@@ -38,6 +71,8 @@ export interface CommandContext<
   request: CommandRequest;
   store: CommandStore<TStore>;
   log: CommandLog;
+  ui: CommandUi;
+  exec: CommandExec;
 }
 
 export type CommandHandler<
