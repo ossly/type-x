@@ -1,3 +1,5 @@
+import { resolve } from "node:path";
+
 import { readRegistry } from "./registry.js";
 
 export interface ResolvedCommand {
@@ -6,6 +8,7 @@ export interface ResolvedCommand {
   packageVersion: string;
   packagePath: string;
   entry: string;
+  entryFile: string;
   description: string;
 }
 
@@ -33,6 +36,7 @@ export const resolveCommand = async (
     packageVersion: command.packageVersion,
     packagePath: pkg.path,
     entry: command.entry,
+    entryFile: resolve(pkg.path, command.entry),
     description: command.description,
   };
 };

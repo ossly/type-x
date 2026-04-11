@@ -1,0 +1,14 @@
+{
+  "name": "@examples/hello-tools",
+  "version": "0.0.0",
+  "type": "module",
+  "x": {
+    "runtime": "1",
+    "commands": {
+      "hello-dev": {
+        "entry": "./dist/hello.js",
+        "description": "Example local development command"
+      }
+    }
+  }
+}

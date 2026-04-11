@@ -1,6 +1,7 @@
 import type { CommandHandler } from "../runtime/context.js";
 import { doctor } from "./doctor.js";
 import { listCommands } from "./ls.js";
+import { run } from "./run.js";
 
 export const internalCommands: Record<string, CommandHandler> = {
   "--help": () => console.log("help"),
@@ -22,4 +23,5 @@ export const internalCommands: Record<string, CommandHandler> = {
   unalias: () => console.log("unalias"),
 
   doctor: doctor,
+  run: run,
 };
