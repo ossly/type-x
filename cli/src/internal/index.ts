@@ -1,7 +1,8 @@
+import type { CommandHandler } from "../runtime/context.js";
 import { doctor } from "./doctor.js";
 import { listCommands } from "./ls.js";
 
-export const internalCommands = {
+export const internalCommands: Record<string, CommandHandler> = {
   "--help": () => console.log("help"),
   "-h": () => console.log("help"),
 

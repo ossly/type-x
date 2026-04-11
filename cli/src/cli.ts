@@ -1,29 +1,32 @@
 #!/usr/bin/env node
 
 import { internalCommands } from "./internal/index.js";
-import { readRegistry } from "./runtime/registry.js";
+import { invokeCommand } from "./runtime/invoke-command.js";
+import { createRequest } from "./runtime/request.js";
+import { resolveCommand } from "./runtime/resolve-command.js";
 
-const main = async (argv: string[]) => {
+const main = async (argv: string[]): Promise<void> => {
+  const request = createRequest(argv);
   const command = argv[0] ?? "--help";
+  const internalCommand = internalCommands[command];
 
-  if (command in internalCommands) {
-    return internalCommands[command as keyof typeof internalCommands]();
+  if (internalCommand) {
+    return invokeCommand(command, internalCommand, request);
   }
 
-  const registry = await readRegistry();
-  const registeredCommand = registry.commands[command];
+  const resolvedCommand = await resolveCommand(command);
 
-  if (registeredCommand) {
+  if (resolvedCommand) {
     console.log(
-      `External command: ${command} (${registeredCommand.packageName}@${registeredCommand.packageVersion})`,
+      `Resolved external command: ${resolvedCommand.commandName} (${resolvedCommand.packageName}@${resolvedCommand.packageVersion}) -> ${resolvedCommand.packagePath}/${resolvedCommand.entry}`,
     );
     return;
   }
 
-  console.log(`External command not found: ${command}`);
+  throw new Error(`External command not found: ${command}`);
 };
 
 main(process.argv.slice(2)).catch((error: unknown) => {
-  console.error(error);
+  console.error(error instanceof Error ? error.message : String(error));
   process.exitCode = 1;
 });

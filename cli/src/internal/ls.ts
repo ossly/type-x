@@ -1,3 +1,4 @@
+import type { CommandHandler } from "../runtime/context.js";
 import { readRegistry } from "../runtime/registry.js";
 
 interface CommandRow {
@@ -7,7 +8,7 @@ interface CommandRow {
   description: string;
 }
 
-export const listCommands = async (): Promise<void> => {
+export const listCommands: CommandHandler = async () => {
   const registry = await readRegistry();
 
   const rows: CommandRow[] = Object.entries(registry.commands)
