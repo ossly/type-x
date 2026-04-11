@@ -22,6 +22,11 @@ coverage
 # Vercel
 .vercel
 
+# IDE
+.idea
+.vscode
+.cursor
+
 # Build Outputs
 .next/
 out/
