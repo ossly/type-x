@@ -30,3 +30,57 @@ test("x run executes a local package command", async () => {
   assert.match(result.stdout, /command: hello-dev/);
   assert.match(result.stdout, /@examples\/hello-tools@0.0.0/);
 });
+
+test("x add installs a package and x remove deletes it", async () => {
+  const xHome = await mkdtemp(join(tmpdir(), "type-x-cli-add-remove-"));
+  const cliEntrypoint = resolve(process.cwd(), "dist/src/cli.js");
+  const packagePath = resolve(process.cwd(), "../examples/hello-tools");
+
+  const addResult = await execFileAsync(
+    "node",
+    [cliEntrypoint, "add", packagePath],
+    {
+      cwd: process.cwd(),
+      env: {
+        ...process.env,
+        X_HOME: xHome,
+      },
+    },
+  );
+
+  assert.match(addResult.stdout, /Installed @examples\/hello-tools@0.0.0/);
+
+  const lsAfterAdd = await execFileAsync("node", [cliEntrypoint, "ls"], {
+    cwd: process.cwd(),
+    env: {
+      ...process.env,
+      X_HOME: xHome,
+    },
+  });
+
+  assert.match(lsAfterAdd.stdout, /hello-dev/);
+
+  const removeResult = await execFileAsync(
+    "node",
+    [cliEntrypoint, "remove", "@examples/hello-tools"],
+    {
+      cwd: process.cwd(),
+      env: {
+        ...process.env,
+        X_HOME: xHome,
+      },
+    },
+  );
+
+  assert.match(removeResult.stdout, /Removed @examples\/hello-tools\./);
+
+  const lsAfterRemove = await execFileAsync("node", [cliEntrypoint, "ls"], {
+    cwd: process.cwd(),
+    env: {
+      ...process.env,
+      X_HOME: xHome,
+    },
+  });
+
+  assert.match(lsAfterRemove.stdout, /No installed commands\./);
+});
