@@ -1,0 +1,108 @@
+import { cp } from "node:fs/promises";
+import { join } from "node:path";
+
+import type { PackageManifest } from "../runtime/manifest.js";
+import {
+  readRegistry,
+  writeRegistry,
+  type Registry,
+  type RegistryCommand,
+  type RegistryPackage,
+} from "../runtime/registry.js";
+import { ensureRuntimeDirs } from "../runtime/paths.js";
+
+const INTERNAL_COMMAND_NAMES = new Set([
+  "add",
+  "upgrade",
+  "remove",
+  "ls",
+  "alias",
+  "unalias",
+  "run",
+  "doctor",
+  "run-alias",
+  "--help",
+  "-h",
+  "--version",
+  "-v",
+  "rm",
+]);
+
+export const registerPackageInstall = async (
+  manifest: PackageManifest,
+): Promise<void> => {
+  const paths = await ensureRuntimeDirs();
+  const registry = await readRegistry();
+
+  assertPackageCanBeInstalled(registry, manifest);
+
+  const packageDir = join(
+    paths.packagesDir,
+    sanitizePackageName(manifest.packageName),
+    manifest.packageVersion,
+  );
+
+  await cp(manifest.packagePath, packageDir, {
+    recursive: true,
+    errorOnExist: true,
+  });
+
+  const registryPackage: RegistryPackage = {
+    name: manifest.packageName,
+    version: manifest.packageVersion,
+    path: packageDir,
+    commands: Object.keys(manifest.commands),
+  };
+
+  registry.packages[manifest.packageName] = registryPackage;
+
+  for (const [commandName, command] of Object.entries(manifest.commands)) {
+    const registryCommand: RegistryCommand = {
+      packageName: manifest.packageName,
+      packageVersion: manifest.packageVersion,
+      entry: command.entry,
+      description: command.description,
+    };
+
+    registry.commands[commandName] = registryCommand;
+  }
+
+  await writeRegistry(registry);
+};
+
+const assertPackageCanBeInstalled = (
+  registry: Registry,
+  manifest: PackageManifest,
+): void => {
+  const existingPackage = registry.packages[manifest.packageName];
+
+  if (existingPackage) {
+    throw new Error(
+      `Package "${manifest.packageName}" is already installed at version "${existingPackage.version}".`,
+    );
+  }
+
+  for (const commandName of Object.keys(manifest.commands)) {
+    if (INTERNAL_COMMAND_NAMES.has(commandName)) {
+      throw new Error(
+        `Command "${commandName}" conflicts with an internal x command.`,
+      );
+    }
+
+    if (registry.commands[commandName]) {
+      throw new Error(
+        `Command "${commandName}" is already registered by package "${registry.commands[commandName].packageName}".`,
+      );
+    }
+
+    if (registry.aliases[commandName]) {
+      throw new Error(
+        `Command "${commandName}" conflicts with an existing alias.`,
+      );
+    }
+  }
+};
+
+const sanitizePackageName = (packageName: string): string => {
+  return packageName.replaceAll("/", "__");
+};

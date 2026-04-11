@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 
 import { internalCommands } from "./internal/index.js";
-import { createCommandContext } from "./runtime/context.js";
+import { executeCommand } from "./runtime/execute-command.js";
 import { executeResolvedCommand } from "./runtime/execute-resolved-command.js";
-import { invokeCommand } from "./runtime/invoke-command.js";
 import { createRequest } from "./runtime/request.js";
 import { resolveCommand } from "./runtime/resolve-command.js";
 
@@ -13,16 +12,15 @@ const main = async (argv: string[]): Promise<void> => {
   const internalCommand = internalCommands[command];
 
   if (internalCommand) {
-    const context = createCommandContext(
-      {
+    return executeCommand({
+      command: {
         name: command,
         packageName: "@type-x/cli",
         version: "0.0.0",
       },
+      handler: internalCommand,
       request,
-    );
-
-    return invokeCommand(internalCommand, context);
+    });
   }
 
   const resolvedCommand = await resolveCommand(command);

@@ -1,4 +1,5 @@
 import type { CommandHandler } from "../runtime/context.js";
+import { add } from "./add.js";
 import { doctor } from "./doctor.js";
 import { listCommands } from "./ls.js";
 import { run } from "./run.js";
@@ -12,7 +13,7 @@ export const internalCommands: Record<string, CommandHandler> = {
 
   ls: listCommands,
 
-  add: () => console.log("add"),
+  add: add,
 
   remove: () => console.log("remove"),
   rm: () => console.log("remove"),
