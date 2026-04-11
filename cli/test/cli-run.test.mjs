@@ -49,6 +49,8 @@ test("x add installs a package and x remove deletes it", async () => {
   );
 
   assert.match(addResult.stdout, /Installed @examples\/hello-tools@0.0.0/);
+  assert.match(addResult.stdout, /COMMAND\s+PACKAGE\s+VERSION\s+DESCRIPTION/);
+  assert.match(addResult.stdout, /hello-dev\s+@examples\/hello-tools\s+0.0.0\s+Example local development command/);
 
   const lsAfterAdd = await execFileAsync("node", [cliEntrypoint, "ls"], {
     cwd: process.cwd(),
@@ -193,6 +195,21 @@ test("x alias creates an alias that executes the target command and x unalias re
   assert.match(aliasResult.stdout, /Created alias hi -> hello-dev\./);
   assert.match(aliasResult.stdout, /Run "x setup-shell" to add it to/);
 
+  const aliasesResult = await execFileAsync(
+    "node",
+    [cliEntrypoint, "aliases"],
+    {
+      cwd: process.cwd(),
+      env: {
+        ...process.env,
+        X_HOME: xHome,
+      },
+    },
+  );
+
+  assert.match(aliasesResult.stdout, /ALIAS\s+COMMAND/);
+  assert.match(aliasesResult.stdout, /hi\s+hello-dev/);
+
   const aliasRunResult = await execFileAsync("node", [cliEntrypoint, "hi"], {
     cwd: process.cwd(),
     env: {
@@ -229,6 +246,49 @@ test("x alias creates an alias that executes the target command and x unalias re
       }),
     /Command not found: hi/,
   );
+});
+
+test("x alias allows exposing an installed command under the same global name", async () => {
+  const xHome = await mkdtemp(join(tmpdir(), "type-x-cli-alias-same-name-"));
+  const cliEntrypoint = resolve(process.cwd(), "dist/src/cli.js");
+  const packagePath = resolve(process.cwd(), "../examples/hello-tools");
+
+  await execFileAsync("node", [cliEntrypoint, "add", packagePath], {
+    cwd: process.cwd(),
+    env: {
+      ...process.env,
+      X_HOME: xHome,
+    },
+  });
+
+  const aliasResult = await execFileAsync(
+    "node",
+    [cliEntrypoint, "alias", "hello-dev=hello-dev"],
+    {
+      cwd: process.cwd(),
+      env: {
+        ...process.env,
+        X_HOME: xHome,
+      },
+    },
+  );
+
+  assert.match(aliasResult.stdout, /Created alias hello-dev -> hello-dev\./);
+
+  const directRunResult = await execFileAsync(
+    "node",
+    [cliEntrypoint, "hello-dev", "--name", "codex"],
+    {
+      cwd: process.cwd(),
+      env: {
+        ...process.env,
+        X_HOME: xHome,
+      },
+    },
+  );
+
+  assert.match(directRunResult.stdout, /hello from local package/);
+  assert.match(directRunResult.stdout, /command: hello-dev/);
 });
 
 test("x setup-shell adds ~/.x/bin to the detected shell rc file", async () => {

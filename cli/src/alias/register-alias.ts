@@ -20,10 +20,6 @@ export const registerAlias = async (
     throw new Error(`Target command "${targetCommand}" is not installed.`);
   }
 
-  if (registry.commands[aliasName]) {
-    throw new Error(`Alias "${aliasName}" conflicts with an installed command.`);
-  }
-
   if (registry.aliases[aliasName]) {
     throw new Error(`Alias "${aliasName}" already exists.`);
   }

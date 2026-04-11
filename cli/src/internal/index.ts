@@ -1,6 +1,7 @@
 import type { CommandHandler } from "../runtime/context.js";
 import { add } from "./add.js";
 import { alias } from "./alias.js";
+import { listAliases } from "./aliases.js";
 import { doctor } from "./doctor.js";
 import { listCommands } from "./ls.js";
 import { remove } from "./remove.js";
@@ -27,6 +28,7 @@ export const internalCommands: Record<string, CommandHandler> = {
   upgrade: upgrade,
 
   alias: alias,
+  aliases: listAliases,
   unalias: unalias,
 
   doctor: doctor,

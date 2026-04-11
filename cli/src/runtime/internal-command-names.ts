@@ -4,6 +4,7 @@ export const INTERNAL_COMMAND_NAMES = new Set([
   "remove",
   "ls",
   "alias",
+  "aliases",
   "unalias",
   "run",
   "doctor",
