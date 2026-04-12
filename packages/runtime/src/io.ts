@@ -55,7 +55,7 @@ export const createCommandIo = ({
   };
 };
 
-const expandPath = (path: string, cwd: string): string => {
+export const expandPath = (path: string, cwd: string): string => {
   if (path === "~") {
     return homedir();
   }

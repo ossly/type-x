@@ -108,6 +108,50 @@ test("initCli supports overriding runtime homeDir", async () => {
   }
 });
 
+test("initCli expands ~ in runtime homeDir overrides", async () => {
+  const previousArgv = process.argv;
+  // eslint-disable-next-line turbo/no-undeclared-env-vars
+  const previousHome = process.env.HOME;
+  const cwd = await mkdtemp(join(tmpdir(), "type-x-runtime-home-tilde-"));
+  const fakeHome = await mkdtemp(join(tmpdir(), "type-x-runtime-home-root-"));
+  const entryFilePath = join(cwd, "dist/cli.js");
+  let resolveHandler;
+  const handlerFinished = new Promise((resolve) => {
+    resolveHandler = resolve;
+  });
+
+  // eslint-disable-next-line turbo/no-undeclared-env-vars
+  process.env.HOME = fakeHome;
+  process.argv = ["node", entryFilePath, "hello"];
+
+  try {
+    initCli(async (context) => {
+      await context.store.set("runs", 3);
+      resolveHandler();
+    }, {
+      cwd,
+      entryFilePath,
+      name: "runtime-cli",
+      packageName: "@examples/runtime-cli",
+      version: "1.2.3",
+      runtime: {
+        homeDir: "~/.hello",
+      },
+    });
+
+    await handlerFinished;
+
+    const store = createCommandStore(
+      "@examples/runtime-cli",
+      join(fakeHome, ".hello"),
+    );
+    assert.equal(await store.get("runs"), 3);
+  } finally {
+    process.argv = previousArgv;
+    restoreEnvVar("HOME", previousHome);
+  }
+});
+
 test("initCli sets process exit code on errors", async () => {
   const previousArgv = process.argv;
   const previousExitCode = process.exitCode;

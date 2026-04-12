@@ -4,6 +4,7 @@ import { homedir } from "node:os";
 import { basename, dirname, extname, join, resolve } from "node:path";
 
 import { createCommandContext } from "./context.js";
+import { expandPath } from "./io.js";
 import { invokeCommand } from "./invoke-command.js";
 import { createRequest } from "./request.js";
 
@@ -54,8 +55,9 @@ const runCommand = async <
   const packageMetadata = await readPackageMetadata(entryFilePath, cwd);
   const command = resolveCommandMetadata(options, packageMetadata, entryFilePath);
   const runtimeHomeDir =
-    options.runtime?.homeDir ??
-    getDefaultRuntimeHomeDir(command.packageName);
+    options.runtime?.homeDir
+      ? expandPath(options.runtime.homeDir, cwd)
+      : getDefaultRuntimeHomeDir(command.packageName);
   const request = createRequest(argv, {
     invocationArgv: [command.name, ...argv],
     cwd,

@@ -53,13 +53,3 @@ initCli(main, {
   }
 });
 ```
-
-If you want project-local development state instead, pass your own path:
-
-```ts
-initCli(main, {
-  runtime: {
-    homeDir: "./.type-x/dev"
-  }
-});
-```

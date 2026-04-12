@@ -23,7 +23,7 @@ export { createCommandContext } from "./context.js";
 export { createCommandEnv } from "./env.js";
 export { createCommandExec } from "./exec.js";
 export { createCommandGit } from "./git.js";
-export { createCommandIo } from "./io.js";
+export { createCommandIo, expandPath } from "./io.js";
 export { createRequest } from "./request.js";
 export { createCommandStore, getStoreFilePath } from "./command-store.js";
 export { createCommandUi } from "./ui.js";
