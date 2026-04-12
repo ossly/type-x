@@ -5,11 +5,16 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import process from "node:process";
 
-import { createCommandStore, initCli, runCommand } from "../dist/src/index.js";
+import { createCommandStore, initCli } from "../dist/src/index.js";
 
-test("runCommand uses project-local .type-x/dev store by default", async () => {
+test("initCli uses project-local .type-x/dev store by default", async () => {
+  const previousArgv = process.argv;
   const cwd = await mkdtemp(join(tmpdir(), "type-x-runtime-project-"));
   const entryFilePath = join(cwd, "dist/cli.js");
+  let resolveHandler;
+  const handlerFinished = new Promise((resolve) => {
+    resolveHandler = resolve;
+  });
 
   await writeFile(
     join(cwd, "package.json"),
@@ -26,11 +31,10 @@ test("runCommand uses project-local .type-x/dev store by default", async () => {
     ) + "\n",
   );
 
-  await runCommand({
-    cwd,
-    argv: ["hello", "123"],
-    entryFilePath,
-    handler: async (context) => {
+  process.argv = ["node", entryFilePath, "hello", "123"];
+
+  try {
+    initCli(async (context) => {
       await context.store.set("runs", 1);
 
       assert.equal(context.command.name, "runtime-cli");
@@ -39,37 +43,66 @@ test("runCommand uses project-local .type-x/dev store by default", async () => {
       assert.deepEqual(context.request.argv, ["hello", "123"]);
       assert.deepEqual(context.request.args, ["hello", "123"]);
       assert.equal(context.request.invocation.raw, "runtime-cli hello 123");
-    },
-  });
+      resolveHandler();
+    }, {
+      cwd,
+      entryFilePath,
+    });
 
-  const storeFilePath = join(cwd, ".type-x", "dev", "stores", "@examples__runtime-cli.json");
-  const storeContent = await readFile(storeFilePath, "utf8");
+    await handlerFinished;
 
-  assert.match(storeContent, /"runs": 1/);
+    const storeFilePath = join(
+      cwd,
+      ".type-x",
+      "dev",
+      "stores",
+      "@examples__runtime-cli.json",
+    );
+    const storeContent = await readFile(storeFilePath, "utf8");
+
+    assert.match(storeContent, /"runs": 1/);
+  } finally {
+    process.argv = previousArgv;
+  }
 });
 
-test("runCommand supports overriding runtime homeDir", async () => {
+test("initCli supports overriding runtime homeDir", async () => {
+  const previousArgv = process.argv;
   const cwd = await mkdtemp(join(tmpdir(), "type-x-runtime-home-"));
+  const entryFilePath = join(cwd, "dist/cli.js");
   const customHomeDir = join(cwd, ".custom-runtime-home");
-
-  await runCommand({
-    cwd,
-    name: "runtime-cli",
-    packageName: "@examples/runtime-cli",
-    version: "1.2.3",
-    runtime: {
-      homeDir: customHomeDir,
-    },
-    handler: async (context) => {
-      await context.store.set("runs", 2);
-    },
+  let resolveHandler;
+  const handlerFinished = new Promise((resolve) => {
+    resolveHandler = resolve;
   });
 
-  const store = createCommandStore("@examples/runtime-cli", customHomeDir);
-  assert.equal(await store.get("runs"), 2);
+  process.argv = ["node", entryFilePath, "hello"];
+
+  try {
+    initCli(async (context) => {
+      await context.store.set("runs", 2);
+      resolveHandler();
+    }, {
+      cwd,
+      entryFilePath,
+      name: "runtime-cli",
+      packageName: "@examples/runtime-cli",
+      version: "1.2.3",
+      runtime: {
+        homeDir: customHomeDir,
+      },
+    });
+
+    await handlerFinished;
+
+    const store = createCommandStore("@examples/runtime-cli", customHomeDir);
+    assert.equal(await store.get("runs"), 2);
+  } finally {
+    process.argv = previousArgv;
+  }
 });
 
-test("initCli wraps runCommand and sets process exit code on errors", async () => {
+test("initCli sets process exit code on errors", async () => {
   const previousArgv = process.argv;
   const previousExitCode = process.exitCode;
   const previousError = globalThis.console.error;

@@ -10,10 +10,7 @@ export interface CommandRuntimeOptions {
   homeDir?: string;
 }
 
-export interface RunCommandOptions<
-  TStore extends Record<string, unknown> = Record<string, unknown>,
-> {
-  handler: CommandHandler<TStore>;
+export interface InitCliOptions {
   name?: string;
   packageName?: string;
   version?: string;
@@ -31,10 +28,23 @@ interface PackageMetadata {
   bin?: unknown;
 }
 
-export const runCommand = async <
+export const initCli = <
   TStore extends Record<string, unknown> = Record<string, unknown>,
 >(
-  options: RunCommandOptions<TStore>,
+  handler: CommandHandler<TStore>,
+  options: InitCliOptions = {},
+): void => {
+  void runCommand(handler, options).catch((error: unknown) => {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exitCode = 1;
+  });
+};
+
+const runCommand = async <
+  TStore extends Record<string, unknown> = Record<string, unknown>,
+>(
+  handler: CommandHandler<TStore>,
+  options: InitCliOptions,
 ): Promise<void> => {
   const cwd = options.cwd ?? process.cwd();
   const env = options.env ?? process.env;
@@ -51,22 +61,7 @@ export const runCommand = async <
   });
   const context = createCommandContext<TStore>(command, request, runtimeHomeDir);
 
-  await invokeCommand(options.handler, context);
-};
-
-export const initCli = <
-  TStore extends Record<string, unknown> = Record<string, unknown>,
->(
-  handler: CommandHandler<TStore>,
-  options: Omit<RunCommandOptions<TStore>, "handler"> = {},
-): void => {
-  void runCommand({
-    ...options,
-    handler,
-  }).catch((error: unknown) => {
-    console.error(error instanceof Error ? error.message : String(error));
-    process.exitCode = 1;
-  });
+  await invokeCommand(handler, context);
 };
 
 const readPackageMetadata = async (
@@ -109,10 +104,8 @@ const readPackageMetadata = async (
   };
 };
 
-const resolveCommandMetadata = <
-  TStore extends Record<string, unknown> = Record<string, unknown>,
->(
-  options: RunCommandOptions<TStore>,
+const resolveCommandMetadata = (
+  options: InitCliOptions,
   packageMetadata: PackageMetadata,
   entryFilePath: string,
 ): CommandMetadata => {

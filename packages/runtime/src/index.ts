@@ -29,5 +29,5 @@ export { createCommandStore, getStoreFilePath } from "./command-store.js";
 export { createCommandUi } from "./ui.js";
 export { getRuntimePaths, ensureRuntimeDirs } from "./paths.js";
 export { invokeCommand } from "./invoke-command.js";
-export { initCli, runCommand } from "./run-command.js";
-export type { CommandRuntimeOptions, RunCommandOptions } from "./run-command.js";
+export { initCli } from "./run-command.js";
+export type { CommandRuntimeOptions, InitCliOptions } from "./run-command.js";
