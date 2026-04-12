@@ -2,11 +2,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import { mkdtemp, mkdir, writeFile } from "node:fs/promises";
+import { access, mkdtemp, mkdir, readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import process from "node:process";
-import { readFile } from "node:fs/promises";
 
 const execFileAsync = promisify(execFile);
 const cliEntrypoint = resolve(process.cwd(), "dist/src/cli.js");
@@ -90,6 +89,18 @@ test("x add installs a package and x remove deletes it", async () => {
 
   assert.match(lsAfterAdd.stdout, /hello-dev/);
 
+  await execFileAsync(
+    "node",
+    [cliEntrypoint, "alias", "hi=hello-dev"],
+    {
+      cwd: process.cwd(),
+      env: {
+        ...process.env,
+        X_HOME: xHome,
+      },
+    },
+  );
+
   const removeResult = await execFileAsync(
     "node",
     [cliEntrypoint, "remove", "@examples/hello-tools"],
@@ -114,6 +125,35 @@ test("x add installs a package and x remove deletes it", async () => {
   });
 
   assert.match(lsAfterRemove.stdout, /No installed commands\./);
+
+  const aliasesAfterRemove = await execFileAsync(
+    "node",
+    [cliEntrypoint, "aliases"],
+    {
+      cwd: process.cwd(),
+      env: {
+        ...process.env,
+        X_HOME: xHome,
+      },
+    },
+  );
+
+  assert.match(aliasesAfterRemove.stdout, /No aliases configured\./);
+
+  const aliasShimPath = join(xHome, "bin", "hi");
+  await assert.rejects(() => access(aliasShimPath));
+
+  await assert.rejects(
+    () =>
+      execFileAsync("node", [cliEntrypoint, "hi"], {
+        cwd: process.cwd(),
+        env: {
+          ...process.env,
+          X_HOME: xHome,
+        },
+      }),
+    /Command not found: hi/,
+  );
 });
 
 test("x upgrade replaces an installed package version", async () => {
