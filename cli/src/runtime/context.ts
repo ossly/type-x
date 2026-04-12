@@ -6,6 +6,7 @@ import type {
 import { createCommandStore } from "./command-store.js";
 import { createCommandExec } from "./exec.js";
 import { createCommandGit } from "./git.js";
+import { createCommandIo } from "./io.js";
 import { createCommandUi } from "./ui.js";
 
 export const createCommandContext = (
@@ -29,5 +30,8 @@ export const createCommandContext = (
     ui: createCommandUi(),
     exec,
     git: createCommandGit(exec),
+    io: createCommandIo({
+      cwd: request.pwd,
+    }),
   };
 };

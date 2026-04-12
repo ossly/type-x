@@ -77,6 +77,25 @@ export interface CommandGit {
   getInfo(): Promise<CommandGitInfo>;
 }
 
+export interface CommandIoDownloadOptions {
+  destination?: string;
+  fileName?: string;
+  overwrite?: boolean;
+}
+
+export interface CommandIoDownloadResult {
+  path: string;
+  fileName: string;
+}
+
+export interface CommandIo {
+  expandPath(path: string): string;
+  download(
+    url: string,
+    options?: CommandIoDownloadOptions,
+  ): Promise<CommandIoDownloadResult>;
+}
+
 export interface CommandContext<
   TStore extends Record<string, unknown> = Record<string, unknown>,
 > {
@@ -87,6 +106,7 @@ export interface CommandContext<
   ui: CommandUi;
   exec: CommandExec;
   git: CommandGit;
+  io: CommandIo;
 }
 
 export type CommandHandler<
