@@ -1,6 +1,7 @@
 import type { CommandHandler, CommandMetadata } from "@type-x/types";
 import { readFile } from "node:fs/promises";
-import { basename, dirname, extname, join, resolve } from "node:path";
+import { homedir } from "node:os";
+import { basename, dirname, extname, join, relative, resolve } from "node:path";
 
 import { createCommandContext } from "./context.js";
 import { invokeCommand } from "./invoke-command.js";
@@ -53,7 +54,8 @@ const runCommand = async <
   const packageMetadata = await readPackageMetadata(entryFilePath, cwd);
   const command = resolveCommandMetadata(options, packageMetadata, entryFilePath);
   const runtimeHomeDir =
-    options.runtime?.homeDir ?? join(packageMetadata.packageRoot, ".type-x", "dev");
+    options.runtime?.homeDir ??
+    getDefaultRuntimeHomeDir(packageMetadata.packageRoot, command.packageName, cwd);
   const request = createRequest(argv, {
     invocationArgv: [command.name, ...argv],
     cwd,
@@ -152,6 +154,34 @@ const inferCommandName = (
 const stripPackageScope = (name: string): string => {
   const slashIndex = name.lastIndexOf("/");
   return slashIndex >= 0 ? name.slice(slashIndex + 1) : name;
+};
+
+const getDefaultRuntimeHomeDir = (
+  packageRoot: string,
+  packageName: string,
+  cwd: string,
+): string => {
+  const packageKey = sanitizePackageName(packageName);
+
+  if (isDevExecution(packageRoot, cwd)) {
+    return join(packageRoot, ".type-x", packageKey);
+  }
+
+  return join(homedir(), ".type-x", packageKey);
+};
+
+const sanitizePackageName = (packageName: string): string => {
+  return packageName.replace(/^@/, "").replaceAll("/", "__");
+};
+
+const isDevExecution = (packageRoot: string, cwd: string): boolean => {
+  return isSameOrDescendantPath(cwd, packageRoot) || isSameOrDescendantPath(packageRoot, cwd);
+};
+
+const isSameOrDescendantPath = (targetPath: string, basePath: string): boolean => {
+  const pathDiff = relative(basePath, targetPath);
+
+  return pathDiff === "" || (!pathDiff.startsWith("..") && !pathDiff.startsWith("../"));
 };
 
 const findPackageRoot = async (startDir: string): Promise<string | undefined> => {

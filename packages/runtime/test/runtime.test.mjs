@@ -7,7 +7,7 @@ import process from "node:process";
 
 import { createCommandStore, initCli } from "../dist/src/index.js";
 
-test("initCli uses project-local .type-x/dev store by default", async () => {
+test("initCli uses package-local .type-x/<package-name> store during development", async () => {
   const previousArgv = process.argv;
   const cwd = await mkdtemp(join(tmpdir(), "type-x-runtime-project-"));
   const entryFilePath = join(cwd, "dist/cli.js");
@@ -54,7 +54,7 @@ test("initCli uses project-local .type-x/dev store by default", async () => {
     const storeFilePath = join(
       cwd,
       ".type-x",
-      "dev",
+      "examples__runtime-cli",
       "stores",
       "@examples__runtime-cli.json",
     );
@@ -63,6 +63,65 @@ test("initCli uses project-local .type-x/dev store by default", async () => {
     assert.match(storeContent, /"runs": 1/);
   } finally {
     process.argv = previousArgv;
+  }
+});
+
+test("initCli uses ~/.type-x/<package-name> store outside the package checkout", async () => {
+  const previousArgv = process.argv;
+  // eslint-disable-next-line turbo/no-undeclared-env-vars
+  const previousHome = process.env.HOME;
+  const packageRoot = await mkdtemp(join(tmpdir(), "type-x-runtime-package-"));
+  const cwd = await mkdtemp(join(tmpdir(), "type-x-runtime-outside-"));
+  const fakeHome = await mkdtemp(join(tmpdir(), "type-x-runtime-home-root-"));
+  const entryFilePath = join(packageRoot, "dist/cli.js");
+  let resolveHandler;
+  const handlerFinished = new Promise((resolve) => {
+    resolveHandler = resolve;
+  });
+
+  await writeFile(
+    join(packageRoot, "package.json"),
+    JSON.stringify(
+      {
+        name: "@examples/runtime-cli",
+        version: "1.2.3",
+        bin: {
+          "runtime-cli": "./dist/cli.js",
+        },
+      },
+      null,
+      2,
+    ) + "\n",
+  );
+
+  // eslint-disable-next-line turbo/no-undeclared-env-vars
+  process.env.HOME = fakeHome;
+  process.argv = ["node", entryFilePath, "hello"];
+
+  try {
+    initCli(async (context) => {
+      await context.store.set("runs", 3);
+      resolveHandler();
+    }, {
+      cwd,
+      entryFilePath,
+    });
+
+    await handlerFinished;
+
+    const storeFilePath = join(
+      fakeHome,
+      ".type-x",
+      "examples__runtime-cli",
+      "stores",
+      "@examples__runtime-cli.json",
+    );
+    const storeContent = await readFile(storeFilePath, "utf8");
+
+    assert.match(storeContent, /"runs": 3/);
+  } finally {
+    process.argv = previousArgv;
+    restoreEnvVar("HOME", previousHome);
   }
 });
 
@@ -146,6 +205,15 @@ test("initCli sets process exit code on errors", async () => {
     process.exitCode = previousExitCode;
   }
 });
+
+const restoreEnvVar = (name, value) => {
+  if (value === undefined) {
+    delete process.env[name];
+    return;
+  }
+
+  process.env[name] = value;
+};
 
 const waitFor = async (predicate) => {
   for (let attempt = 0; attempt < 20; attempt += 1) {
