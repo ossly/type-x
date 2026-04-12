@@ -41,9 +41,9 @@ When `x` executes a command, it injects the runtime context from `@type-x/runtim
 
 ## Store Behavior
 
-Installed commands use the `x` runtime home, which defaults to `~/.x`.
+Installed commands use the `x` runtime home, which defaults to `~/.type-x/type-x__cli`.
 
-Stores are shared per package, not per command. If a package exposes multiple commands, they all read and write the same package store file under `~/.x/stores`.
+Stores are shared per package, not per command. If a package exposes multiple commands, they all read and write the same package store file under `~/.type-x/type-x__cli/stores`.
 
 ## Internal Commands
 
@@ -60,4 +60,3 @@ The built-in commands are intentionally small:
 - `run`
 - `doctor`
 - `setup-shell`
-

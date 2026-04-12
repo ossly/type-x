@@ -11,8 +11,10 @@ export interface RuntimePaths {
   tmpDir: string;
 }
 
+const CLI_PACKAGE_NAME = "@type-x/cli";
+
 export const getRuntimePaths = (): RuntimePaths => {
-  const homeDir = process.env.X_HOME ?? join(homedir(), ".x");
+  const homeDir = process.env.X_HOME ?? getDefaultRuntimeHomeDir();
 
   return {
     homeDir,
@@ -22,6 +24,10 @@ export const getRuntimePaths = (): RuntimePaths => {
     binDir: join(homeDir, "bin"),
     tmpDir: join(homeDir, "tmp"),
   };
+};
+
+export const getDefaultRuntimeHomeDir = (): string => {
+  return join(homedir(), ".type-x", sanitizePackageName(CLI_PACKAGE_NAME));
 };
 
 export const ensureRuntimeDirs = async (): Promise<RuntimePaths> => {
@@ -34,4 +40,8 @@ export const ensureRuntimeDirs = async (): Promise<RuntimePaths> => {
   await mkdir(paths.tmpDir, { recursive: true });
 
   return paths;
+};
+
+const sanitizePackageName = (packageName: string): string => {
+  return packageName.replace(/^@/, "").replaceAll("/", "__");
 };

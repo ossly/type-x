@@ -21,7 +21,7 @@ export const help: CommandHandler = async () => {
   console.log("  run <package-path> <command>    Run a local package command");
   console.log("  doctor                          Show runtime status");
   console.log(
-    "  setup-shell                     Add ~/.x/bin to PATH in your shell config",
+    "  setup-shell                     Add the x bin directory to PATH in your shell config",
   );
   console.log("  --help, -h                      Show this help");
   console.log("  --version, -v                   Show the CLI version");

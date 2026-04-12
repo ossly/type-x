@@ -399,9 +399,8 @@ test("x alias allows exposing an installed command under the same global name", 
   assert.match(directRunResult.stdout, /command: hello-dev/);
 });
 
-test("x setup-shell adds ~/.x/bin to the detected shell rc file", async () => {
+test("x setup-shell adds the default x bin dir to the detected shell rc file", async () => {
   const homeDir = await mkdtemp(join(tmpdir(), "type-x-shell-home-"));
-  const xHome = join(homeDir, ".x");
   const rcFile = join(homeDir, ".zshrc");
 
   const result = await execFileAsync("node", [cliEntrypoint, "setup-shell"], {
@@ -411,17 +410,22 @@ test("x setup-shell adds ~/.x/bin to the detected shell rc file", async () => {
       HOME: homeDir,
       SHELL: "/bin/zsh",
       PATH: process.env.PATH,
-      X_HOME: xHome,
     },
   });
 
-  assert.match(result.stdout, /Added .*\.x\/bin to PATH in .*\.zshrc\./);
+  assert.match(
+    result.stdout,
+    /Added .*\.type-x\/type-x__cli\/bin to PATH in .*\.zshrc\./,
+  );
 
   const rcContent = await import("node:fs/promises").then(({ readFile }) =>
     readFile(rcFile, "utf8"),
   );
 
-  assert.match(rcContent, /export PATH="\$HOME\/\.x\/bin:\$PATH"/);
+  assert.match(
+    rcContent,
+    /export PATH="\$HOME\/\.type-x\/type-x__cli\/bin:\$PATH"/,
+  );
 });
 
 test("x setup-shell uses the configured X_HOME bin path", async () => {

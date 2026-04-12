@@ -2,7 +2,10 @@ import { readFile, writeFile } from "node:fs/promises";
 import { delimiter, join } from "node:path";
 import { homedir } from "node:os";
 
-import { getRuntimePaths } from "../runtime/paths.js";
+import {
+  getDefaultRuntimeHomeDir,
+  getRuntimePaths,
+} from "../runtime/paths.js";
 
 export interface ShellSetupSuggestion {
   shellName: string;
@@ -109,10 +112,11 @@ const getRcFile = (shellName: string): string | null => {
 };
 
 const getPathExportLine = (binDir: string): string => {
-  const defaultBinDir = join(homedir(), ".x", "bin");
+  const defaultBinDir = join(getDefaultRuntimeHomeDir(), "bin");
+  const defaultHomeBinDir = join(homedir(), ".type-x", "type-x__cli", "bin");
 
-  if (binDir === defaultBinDir) {
-    return 'export PATH="$HOME/.x/bin:$PATH"';
+  if (binDir === defaultBinDir && binDir === defaultHomeBinDir) {
+    return 'export PATH="$HOME/.type-x/type-x__cli/bin:$PATH"';
   }
 
   return `export PATH=${quoteShellValue(binDir)}:$PATH`;
