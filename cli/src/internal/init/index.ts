@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { access, mkdir, writeFile } from "node:fs/promises";
 import { basename, dirname, join, resolve } from "node:path";
 
 import type { CommandHandler } from "@type-x/types";
@@ -30,6 +30,9 @@ export const init: CommandHandler = async ({ request, ui, log }) => {
     packageName,
     commandName,
   });
+
+  await assertTemplateFilesDoNotExist(targetPath, template.files);
+
   const task = ui.task(`Scaffolding ${template.label}`);
 
   await writeTemplateFiles(targetPath, template.files);
@@ -81,17 +84,35 @@ const writeTemplateFiles = async (
   targetPath: string,
   files: Array<readonly [string, string]>,
 ): Promise<void> => {
-  await Promise.all(
-    files.map(async ([relativePath, content]) => {
-      const outputPath = join(targetPath, relativePath);
+  for (const [relativePath, content] of files) {
+    const outputPath = join(targetPath, relativePath);
 
-      await mkdir(dirname(outputPath), { recursive: true });
-      await writeFile(outputPath, content, {
-        encoding: "utf8",
-        flag: "wx",
-      });
-    }),
-  );
+    await mkdir(dirname(outputPath), { recursive: true });
+    await writeFile(outputPath, content, {
+      encoding: "utf8",
+      flag: "wx",
+    });
+  }
+};
+
+const assertTemplateFilesDoNotExist = async (
+  targetPath: string,
+  files: Array<readonly [string, string]>,
+): Promise<void> => {
+  for (const [relativePath] of files) {
+    const outputPath = join(targetPath, relativePath);
+
+    try {
+      await access(outputPath);
+      throw new Error(
+        `Cannot initialize project because "${outputPath}" already exists.`,
+      );
+    } catch (error: unknown) {
+      if (!isMissingFileError(error)) {
+        throw error;
+      }
+    }
+  }
 };
 
 const readStringFlag = (
@@ -140,6 +161,10 @@ const isNonInteractiveUiError = (error: unknown): boolean => {
     error instanceof Error &&
     error.message === "Interactive UI is not available in non-interactive mode."
   );
+};
+
+const isMissingFileError = (error: unknown): error is NodeJS.ErrnoException => {
+  return error instanceof Error && "code" in error && error.code === "ENOENT";
 };
 
 export type { InitTemplateKind };

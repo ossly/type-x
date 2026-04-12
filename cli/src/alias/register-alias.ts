@@ -3,6 +3,7 @@ import { INTERNAL_COMMAND_NAME_SET } from "../runtime/internal-command-names.js"
 import {
   getAliasShimPath,
   hasSystemCommand,
+  removeAliasShim,
   writeAliasShim,
 } from "./alias-shim.js";
 
@@ -44,8 +45,14 @@ export const registerAlias = async (
     targetCommand,
   };
 
-  await writeRegistry(registry);
   await writeAliasShim(aliasName);
+
+  try {
+    await writeRegistry(registry);
+  } catch (error: unknown) {
+    await removeAliasShim(aliasName).catch(() => undefined);
+    throw error;
+  }
 };
 
 const hasManagedShim = async (aliasName: string): Promise<boolean> => {

@@ -1,4 +1,4 @@
-import { mkdtemp } from "node:fs/promises";
+import { mkdtemp, rm } from "node:fs/promises";
 import { join, resolve } from "node:path";
 
 import { execFile } from "node:child_process";
@@ -39,6 +39,7 @@ export const packPackage = async (
 
     stdout = result.stdout;
   } catch (error: unknown) {
+    await rm(tempDir, { recursive: true, force: true }).catch(() => undefined);
     throw new Error(
       `Failed to pack package "${spec.raw}": ${getErrorMessage(error)}`,
     );

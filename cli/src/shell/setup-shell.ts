@@ -17,7 +17,7 @@ export const getShellSetupSuggestion = (): ShellSetupSuggestion => {
   const shellPath = process.env.SHELL ?? "";
   const shellName = shellPath.split("/").filter(Boolean).at(-1) ?? "sh";
   const rcFile = getRcFile(shellName);
-  const exportLine = 'export PATH="$HOME/.x/bin:$PATH"';
+  const exportLine = getPathExportLine(binDir);
 
   return {
     shellName,
@@ -106,6 +106,20 @@ const getRcFile = (shellName: string): string | null => {
     default:
       return null;
   }
+};
+
+const getPathExportLine = (binDir: string): string => {
+  const defaultBinDir = join(homedir(), ".x", "bin");
+
+  if (binDir === defaultBinDir) {
+    return 'export PATH="$HOME/.x/bin:$PATH"';
+  }
+
+  return `export PATH=${quoteShellValue(binDir)}:$PATH`;
+};
+
+const quoteShellValue = (value: string): string => {
+  return `'${value.replaceAll("'", `'\\''`)}'`;
 };
 
 const isMissingFileError = (error: unknown): error is NodeJS.ErrnoException => {

@@ -424,6 +424,34 @@ test("x setup-shell adds ~/.x/bin to the detected shell rc file", async () => {
   assert.match(rcContent, /export PATH="\$HOME\/\.x\/bin:\$PATH"/);
 });
 
+test("x setup-shell uses the configured X_HOME bin path", async () => {
+  const homeDir = await mkdtemp(join(tmpdir(), "type-x-shell-custom-home-"));
+  const xHome = join(homeDir, ".custom-x-home");
+  const rcFile = join(homeDir, ".zshrc");
+
+  const result = await execFileAsync("node", [cliEntrypoint, "setup-shell"], {
+    cwd: process.cwd(),
+    env: {
+      ...process.env,
+      HOME: homeDir,
+      SHELL: "/bin/zsh",
+      PATH: process.env.PATH,
+      X_HOME: xHome,
+    },
+  });
+
+  assert.match(result.stdout, /Added .*\.custom-x-home\/bin to PATH in .*\.zshrc\./);
+
+  const rcContent = await import("node:fs/promises").then(({ readFile }) =>
+    readFile(rcFile, "utf8"),
+  );
+
+  assert.match(
+    rcContent,
+    new RegExp(`export PATH='${escapeRegExp(join(xHome, "bin"))}':\\$PATH`),
+  );
+});
+
 test("command store persists across repeated installed command runs", async () => {
   const xHome = await mkdtemp(join(tmpdir(), "type-x-cli-store-"));
   const {
@@ -583,6 +611,31 @@ test("x init --standalone scaffolds a standalone TypeScript CLI", async () => {
   assert.match(source, /hello from hello-standalone/);
   assert.match(readme, /@type-x\/runtime/);
   assert.match(readme, /hello-standalone/);
+});
+
+test("x init fails before writing files when a template file already exists", async () => {
+  const projectDir = await mkdtemp(join(tmpdir(), "type-x-init-existing-"));
+  const targetDir = join(projectDir, "my-command");
+
+  await mkdir(targetDir, { recursive: true });
+  await writeFile(join(targetDir, "README.md"), "# existing\n", "utf8");
+
+  await assert.rejects(
+    () =>
+      execFileAsync(
+        "node",
+        [cliEntrypoint, "init", targetDir],
+        {
+          cwd: process.cwd(),
+          env: process.env,
+        },
+      ),
+    /Cannot initialize project because .*README\.md.* already exists\./,
+  );
+
+  await assert.rejects(() => access(join(targetDir, "package.json")));
+  await assert.rejects(() => access(join(targetDir, "tsconfig.json")));
+  await assert.rejects(() => access(join(targetDir, "src", "index.ts")));
 });
 
 test("x doctor reports shell and registry status", async () => {

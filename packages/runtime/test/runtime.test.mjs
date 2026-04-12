@@ -7,9 +7,12 @@ import process from "node:process";
 
 import { createCommandStore, initCli } from "../dist/src/index.js";
 
-test("initCli uses package-local .type-x/<package-name> store during development", async () => {
+test("initCli uses ~/.type-x/<package-name> store by default", async () => {
   const previousArgv = process.argv;
+  // eslint-disable-next-line turbo/no-undeclared-env-vars
+  const previousHome = process.env.HOME;
   const cwd = await mkdtemp(join(tmpdir(), "type-x-runtime-project-"));
+  const fakeHome = await mkdtemp(join(tmpdir(), "type-x-runtime-home-root-"));
   const entryFilePath = join(cwd, "dist/cli.js");
   let resolveHandler;
   const handlerFinished = new Promise((resolve) => {
@@ -31,6 +34,8 @@ test("initCli uses package-local .type-x/<package-name> store during development
     ) + "\n",
   );
 
+  // eslint-disable-next-line turbo/no-undeclared-env-vars
+  process.env.HOME = fakeHome;
   process.argv = ["node", entryFilePath, "hello", "123"];
 
   try {
@@ -52,64 +57,6 @@ test("initCli uses package-local .type-x/<package-name> store during development
     await handlerFinished;
 
     const storeFilePath = join(
-      cwd,
-      ".type-x",
-      "examples__runtime-cli",
-      "stores",
-      "@examples__runtime-cli.json",
-    );
-    const storeContent = await readFile(storeFilePath, "utf8");
-
-    assert.match(storeContent, /"runs": 1/);
-  } finally {
-    process.argv = previousArgv;
-  }
-});
-
-test("initCli uses ~/.type-x/<package-name> store outside the package checkout", async () => {
-  const previousArgv = process.argv;
-  // eslint-disable-next-line turbo/no-undeclared-env-vars
-  const previousHome = process.env.HOME;
-  const packageRoot = await mkdtemp(join(tmpdir(), "type-x-runtime-package-"));
-  const cwd = await mkdtemp(join(tmpdir(), "type-x-runtime-outside-"));
-  const fakeHome = await mkdtemp(join(tmpdir(), "type-x-runtime-home-root-"));
-  const entryFilePath = join(packageRoot, "dist/cli.js");
-  let resolveHandler;
-  const handlerFinished = new Promise((resolve) => {
-    resolveHandler = resolve;
-  });
-
-  await writeFile(
-    join(packageRoot, "package.json"),
-    JSON.stringify(
-      {
-        name: "@examples/runtime-cli",
-        version: "1.2.3",
-        bin: {
-          "runtime-cli": "./dist/cli.js",
-        },
-      },
-      null,
-      2,
-    ) + "\n",
-  );
-
-  // eslint-disable-next-line turbo/no-undeclared-env-vars
-  process.env.HOME = fakeHome;
-  process.argv = ["node", entryFilePath, "hello"];
-
-  try {
-    initCli(async (context) => {
-      await context.store.set("runs", 3);
-      resolveHandler();
-    }, {
-      cwd,
-      entryFilePath,
-    });
-
-    await handlerFinished;
-
-    const storeFilePath = join(
       fakeHome,
       ".type-x",
       "examples__runtime-cli",
@@ -118,7 +65,7 @@ test("initCli uses ~/.type-x/<package-name> store outside the package checkout",
     );
     const storeContent = await readFile(storeFilePath, "utf8");
 
-    assert.match(storeContent, /"runs": 3/);
+    assert.match(storeContent, /"runs": 1/);
   } finally {
     process.argv = previousArgv;
     restoreEnvVar("HOME", previousHome);

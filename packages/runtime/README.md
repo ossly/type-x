@@ -40,12 +40,9 @@ The injected context exposes:
 
 ## Default Store Location
 
-If you do not override `runtime.homeDir`:
+If you do not override `runtime.homeDir`, the runtime uses:
 
-- running from the package checkout uses
-  `<package-root>/.type-x/<sanitized-package-name>`
-- running outside the package checkout uses
-  `~/.type-x/<sanitized-package-name>`
+- `~/.type-x/<sanitized-package-name>`
 
 You can override that explicitly:
 
@@ -57,3 +54,12 @@ initCli(main, {
 });
 ```
 
+If you want project-local development state instead, pass your own path:
+
+```ts
+initCli(main, {
+  runtime: {
+    homeDir: "./.type-x/dev"
+  }
+});
+```

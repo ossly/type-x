@@ -38,7 +38,19 @@ export const registerPackageInstall = async (
     commands: Object.keys(manifest.commands),
   };
 
-  registry.packages[manifest.packageName] = registryPackage;
+  const nextRegistry: Registry = {
+    ...registry,
+    packages: {
+      ...registry.packages,
+      [manifest.packageName]: registryPackage,
+    },
+    commands: {
+      ...registry.commands,
+    },
+    aliases: {
+      ...registry.aliases,
+    },
+  };
 
   for (const [commandName, command] of Object.entries(manifest.commands)) {
     const registryCommand: RegistryCommand = {
@@ -48,10 +60,15 @@ export const registerPackageInstall = async (
       description: command.description,
     };
 
-    registry.commands[commandName] = registryCommand;
+    nextRegistry.commands[commandName] = registryCommand;
   }
 
-  await writeRegistry(registry);
+  try {
+    await writeRegistry(nextRegistry);
+  } catch (error: unknown) {
+    await rm(packageDir, { recursive: true, force: true }).catch(() => undefined);
+    throw error;
+  }
 };
 
 export const replacePackageInstall = async (
@@ -80,13 +97,24 @@ export const replacePackageInstall = async (
     errorOnExist: true,
   });
 
-  await rm(existingPackage.path, { recursive: true, force: true });
+  const nextRegistry: Registry = {
+    ...registry,
+    packages: {
+      ...registry.packages,
+    },
+    commands: {
+      ...registry.commands,
+    },
+    aliases: {
+      ...registry.aliases,
+    },
+  };
 
   for (const commandName of existingPackage.commands) {
-    delete registry.commands[commandName];
+    delete nextRegistry.commands[commandName];
   }
 
-  registry.packages[manifest.packageName] = {
+  nextRegistry.packages[manifest.packageName] = {
     name: manifest.packageName,
     version: manifest.packageVersion,
     path: packageDir,
@@ -94,7 +122,7 @@ export const replacePackageInstall = async (
   };
 
   for (const [commandName, command] of Object.entries(manifest.commands)) {
-    registry.commands[commandName] = {
+    nextRegistry.commands[commandName] = {
       packageName: manifest.packageName,
       packageVersion: manifest.packageVersion,
       entry: command.entry,
@@ -102,7 +130,16 @@ export const replacePackageInstall = async (
     };
   }
 
-  await writeRegistry(registry);
+  try {
+    await writeRegistry(nextRegistry);
+  } catch (error: unknown) {
+    await rm(packageDir, { recursive: true, force: true }).catch(() => undefined);
+    throw error;
+  }
+
+  await rm(existingPackage.path, { recursive: true, force: true }).catch(
+    () => undefined,
+  );
 };
 
 const assertPackageCanBeInstalled = (
