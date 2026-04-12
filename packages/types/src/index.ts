@@ -96,6 +96,12 @@ export interface CommandIo {
   ): Promise<CommandIoDownloadResult>;
 }
 
+export interface CommandEnv {
+  get(name: string): string | undefined;
+  require(name: string): string;
+  has(name: string): boolean;
+}
+
 export interface CommandContext<
   TStore extends Record<string, unknown> = Record<string, unknown>,
 > {
@@ -107,6 +113,7 @@ export interface CommandContext<
   exec: CommandExec;
   git: CommandGit;
   io: CommandIo;
+  env: CommandEnv;
 }
 
 export type CommandHandler<

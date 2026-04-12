@@ -4,6 +4,7 @@ import type {
   CommandRequest,
 } from "@type-x/types";
 import { createCommandStore } from "./command-store.js";
+import { createCommandEnv } from "./env.js";
 import { createCommandExec } from "./exec.js";
 import { createCommandGit } from "./git.js";
 import { createCommandIo } from "./io.js";
@@ -33,5 +34,6 @@ export const createCommandContext = (
     io: createCommandIo({
       cwd: request.pwd,
     }),
+    env: createCommandEnv(request.env),
   };
 };
