@@ -1,6 +1,7 @@
 import { rm } from "node:fs/promises";
 
 import { removeAliasShim } from "../alias/alias-shim.js";
+import { getStoreFilePath } from "../runtime/command-store.js";
 import { readRegistry, writeRegistry } from "../runtime/registry.js";
 
 export const removePackage = async (packageName: string): Promise<void> => {
@@ -32,6 +33,13 @@ export const removePackage = async (packageName: string): Promise<void> => {
   await Promise.all(
     aliasesToRemove.map(async (aliasName) => {
       await removeAliasShim(aliasName);
+    }),
+  );
+
+  await Promise.all(
+    installedPackage.commands.map(async (commandName) => {
+      const storeFilePath = await getStoreFilePath(packageName, commandName);
+      await rm(storeFilePath, { force: true });
     }),
   );
 };

@@ -101,6 +101,21 @@ test("x add installs a package and x remove deletes it", async () => {
     },
   );
 
+  await execFileAsync("node", [cliEntrypoint, "hello-dev"], {
+    cwd: process.cwd(),
+    env: {
+      ...process.env,
+      X_HOME: xHome,
+    },
+  });
+
+  const storeFilePath = join(
+    xHome,
+    "stores",
+    "@examples__hello-tools__hello-dev.json",
+  );
+  await access(storeFilePath);
+
   const removeResult = await execFileAsync(
     "node",
     [cliEntrypoint, "remove", "@examples/hello-tools"],
@@ -142,6 +157,7 @@ test("x add installs a package and x remove deletes it", async () => {
 
   const aliasShimPath = join(xHome, "bin", "hi");
   await assert.rejects(() => access(aliasShimPath));
+  await assert.rejects(() => access(storeFilePath));
 
   await assert.rejects(
     () =>
