@@ -112,7 +112,7 @@ test("x add installs a package and x remove deletes it", async () => {
   const storeFilePath = join(
     xHome,
     "stores",
-    "@examples__hello-tools__hello-dev.json",
+    "@examples__hello-tools.json",
   );
   await access(storeFilePath);
 

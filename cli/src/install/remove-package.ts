@@ -36,10 +36,6 @@ export const removePackage = async (packageName: string): Promise<void> => {
     }),
   );
 
-  await Promise.all(
-    installedPackage.commands.map(async (commandName) => {
-      const storeFilePath = await getStoreFilePath(packageName, commandName);
-      await rm(storeFilePath, { force: true });
-    }),
-  );
+  const storeFilePath = await getStoreFilePath(packageName);
+  await rm(storeFilePath, { force: true });
 };

@@ -20,7 +20,7 @@ export const createCommandContext = (
   return {
     command,
     request,
-    store: createCommandStore(command.packageName, command.name),
+    store: createCommandStore(command.packageName),
     log: {
       info: (...args: unknown[]) => console.log(...args),
       warn: (...args: unknown[]) => console.warn(...args),

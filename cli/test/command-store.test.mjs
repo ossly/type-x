@@ -16,7 +16,7 @@ test("command store persists values for a package command", async () => {
   process.env.X_HOME = xHome;
 
   try {
-    const store = createCommandStore("@examples/hello-tools", "hello");
+    const store = createCommandStore("@examples/hello-tools");
 
     assert.equal(await store.get("runs"), undefined);
     assert.equal(await store.has("runs"), false);
@@ -31,7 +31,7 @@ test("command store persists values for a package command", async () => {
       name: "codex",
     });
 
-    const storeFile = await getStoreFilePath("@examples/hello-tools", "hello");
+    const storeFile = await getStoreFilePath("@examples/hello-tools");
     const content = await readFile(storeFile, "utf8");
 
     assert.match(content, /"runs": 1/);
@@ -41,26 +41,28 @@ test("command store persists values for a package command", async () => {
   }
 });
 
-test("command store is isolated by package and command name", async () => {
+test("command store is shared across commands in the same package", async () => {
   const xHome = await mkdtemp(join(tmpdir(), "type-x-command-store-scope-"));
   const previousXHome = process.env.X_HOME;
   process.env.X_HOME = xHome;
 
   try {
-    const packageStore = createCommandStore("@examples/hello-tools", "hello");
-    const otherCommandStore = createCommandStore("@examples/hello-tools", "other");
-    const otherPackageStore = createCommandStore("@examples/other-tools", "hello");
+    const packageStore = createCommandStore("@examples/hello-tools");
+    const otherCommandStore = createCommandStore("@examples/hello-tools");
+    const otherPackageStore = createCommandStore("@examples/other-tools");
 
     await packageStore.set("runs", 2);
-    await otherCommandStore.set("runs", 7);
+    await otherCommandStore.set("name", "codex");
     await otherPackageStore.set("runs", 11);
 
     assert.equal(await packageStore.get("runs"), 2);
-    assert.equal(await otherCommandStore.get("runs"), 7);
+    assert.equal(await otherCommandStore.get("runs"), 2);
+    assert.equal(await packageStore.get("name"), "codex");
     assert.equal(await otherPackageStore.get("runs"), 11);
 
     await packageStore.delete("runs");
     assert.equal(await packageStore.get("runs"), undefined);
+    assert.equal(await otherCommandStore.get("runs"), undefined);
 
     await otherCommandStore.clear();
     assert.deepEqual(await otherCommandStore.all(), {});
