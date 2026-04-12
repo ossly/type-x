@@ -461,7 +461,7 @@ test("x --help prints usage and command list", async () => {
   assert.match(result.stdout, /x - installable command runtime/);
   assert.match(result.stdout, /Usage/);
   assert.match(result.stdout, /Internal commands/);
-  assert.match(result.stdout, /init \[path\] \[--ts\]/);
+  assert.match(result.stdout, /init \[path\] \[--standalone\]/);
   assert.match(result.stdout, /add <package-name-or-path>/);
   assert.match(result.stdout, /doctor/);
 });
@@ -479,13 +479,21 @@ test("x --version prints the cli package version", async () => {
   assert.equal(result.stdout.trim(), packageJson.version);
 });
 
-test("x init --ts scaffolds a TypeScript package", async () => {
-  const projectDir = await mkdtemp(join(tmpdir(), "type-x-init-ts-"));
+test("x init scaffolds a TypeScript x package", async () => {
+  const projectDir = await mkdtemp(join(tmpdir(), "type-x-init-x-"));
   const targetDir = join(projectDir, "my-command");
 
   const result = await execFileAsync(
     "node",
-    [cliEntrypoint, "init", targetDir, "--ts"],
+    [
+      cliEntrypoint,
+      "init",
+      targetDir,
+      "--package-name",
+      "@acme/my-command",
+      "--command-name",
+      "hello-x",
+    ],
     {
       cwd: process.cwd(),
       env: process.env,
@@ -494,7 +502,7 @@ test("x init --ts scaffolds a TypeScript package", async () => {
 
   assert.match(result.stdout, /Initialized TypeScript x package/);
   assert.match(result.stdout, /pnpm build/);
-  assert.match(result.stdout, /x run \. my-command/);
+  assert.match(result.stdout, /x run \. hello-x/);
 
   const fs = await import("node:fs/promises");
   const packageJson = JSON.parse(
@@ -504,14 +512,71 @@ test("x init --ts scaffolds a TypeScript package", async () => {
     await fs.readFile(join(targetDir, "tsconfig.json"), "utf8"),
   );
   const source = await fs.readFile(join(targetDir, "src/index.ts"), "utf8");
+  const readme = await fs.readFile(join(targetDir, "README.md"), "utf8");
+  const gitignore = await fs.readFile(join(targetDir, ".gitignore"), "utf8");
 
-  assert.equal(packageJson.name, "my-command");
-  assert.equal(packageJson.x.commands["my-command"].entry, "./dist/src/index.js");
+  assert.equal(packageJson.name, "@acme/my-command");
+  assert.equal(packageJson.x.commands["hello-x"].entry, "./dist/src/index.js");
+  assert.equal(packageJson.x.commands["hello-x"].description, "Say hello from hello-x");
   assert.equal(packageJson.devDependencies["@type-x/typescript-config"], undefined);
+  assert.equal(packageJson.devDependencies["@type-x/types"], "latest");
   assert.equal(tsconfig.extends, undefined);
   assert.deepEqual(tsconfig.compilerOptions.lib, ["es2022"]);
   assert.deepEqual(tsconfig.compilerOptions.types, ["node"]);
   assert.match(source, /CommandContext/);
+  assert.match(source, /hello from hello-x/);
+  assert.match(readme, /@acme\/my-command/);
+  assert.match(readme, /hello-x/);
+  assert.match(gitignore, /node_modules/);
+  assert.match(gitignore, /\.type-x/);
+});
+
+test("x init --standalone scaffolds a standalone TypeScript CLI", async () => {
+  const projectDir = await mkdtemp(join(tmpdir(), "type-x-init-standalone-"));
+  const targetDir = join(projectDir, "my-standalone");
+
+  const result = await execFileAsync(
+    "node",
+    [
+      cliEntrypoint,
+      "init",
+      targetDir,
+      "--standalone",
+      "--package-name",
+      "@acme/hello-standalone",
+      "--command-name",
+      "hello-standalone",
+    ],
+    {
+      cwd: process.cwd(),
+      env: process.env,
+    },
+  );
+
+  assert.match(result.stdout, /Initialized standalone TypeScript CLI/);
+  assert.match(result.stdout, /pnpm build/);
+  assert.match(result.stdout, /node dist\/src\/index\.js/);
+
+  const fs = await import("node:fs/promises");
+  const packageJson = JSON.parse(
+    await fs.readFile(join(targetDir, "package.json"), "utf8"),
+  );
+  const tsconfig = JSON.parse(
+    await fs.readFile(join(targetDir, "tsconfig.json"), "utf8"),
+  );
+  const source = await fs.readFile(join(targetDir, "src/index.ts"), "utf8");
+  const readme = await fs.readFile(join(targetDir, "README.md"), "utf8");
+
+  assert.equal(packageJson.name, "@acme/hello-standalone");
+  assert.equal(packageJson.bin["hello-standalone"], "./dist/src/index.js");
+  assert.equal(packageJson.dependencies["@type-x/runtime"], "latest");
+  assert.equal(packageJson.x, undefined);
+  assert.equal(tsconfig.extends, undefined);
+  assert.deepEqual(tsconfig.compilerOptions.types, ["node"]);
+  assert.match(source, /initCli/);
+  assert.match(source, /hello from hello-standalone/);
+  assert.match(readme, /@type-x\/runtime/);
+  assert.match(readme, /hello-standalone/);
 });
 
 test("x doctor reports shell and registry status", async () => {

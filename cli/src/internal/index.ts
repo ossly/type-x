@@ -4,7 +4,7 @@ import { alias } from "./alias.js";
 import { listAliases } from "./aliases.js";
 import { doctor } from "./doctor.js";
 import { help } from "./help.js";
-import { init } from "./init.js";
+import { init } from "./init/index.js";
 import { listCommands } from "./ls.js";
 import { remove } from "./remove.js";
 import { run } from "./run.js";
