@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import process from "node:process";
 
-import { createRequest } from "../dist/src/runtime/request.js";
+import { createRequest } from "../dist/src/index.js";
 
 test("createRequest parses argv, true positionals, flags, and pwd", () => {
   const originalCwd = process.cwd;

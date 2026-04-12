@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { PassThrough, Writable } from "node:stream";
 
-import { createCommandUi } from "../dist/src/runtime/ui.js";
+import { createCommandUi } from "../dist/src/index.js";
 
 test("createCommandUi rejects in non-interactive mode", async () => {
   const input = new PassThrough();

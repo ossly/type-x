@@ -1,6 +1,6 @@
+import type { CommandRequest } from "@type-x/types";
 import { executeCommand } from "./execute-command.js";
 import { loadCommand } from "./load-command.js";
-import type { CommandRequest } from "./request.js";
 import type { ResolvedCommand } from "./resolve-command.js";
 
 export const executeResolvedCommand = async (

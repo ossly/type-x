@@ -5,8 +5,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import process from "node:process";
 
-import { createCommandExec } from "../dist/src/runtime/exec.js";
-import { createCommandGit } from "../dist/src/runtime/git.js";
+import {
+  createCommandExec,
+  createCommandGit,
+} from "../dist/src/index.js";
 
 test("createCommandGit returns false when git is not installed", async () => {
   const repoDir = await mkdtemp(join(tmpdir(), "type-x-git-missing-"));

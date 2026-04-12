@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import process from "node:process";
 
-import { createCommandExec } from "../dist/src/runtime/exec.js";
+import { createCommandExec } from "../dist/src/index.js";
 
 test("createCommandExec runs a command and captures stdout", async () => {
   const exec = createCommandExec({

@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
+import { createRequest } from "@type-x/runtime";
 import { internalCommands } from "./internal/index.js";
 import { executeCommand } from "./runtime/execute-command.js";
 import { executeResolvedCommand } from "./runtime/execute-resolved-command.js";
-import { createRequest } from "./runtime/request.js";
 import { readRegistry } from "./runtime/registry.js";
 import { INTERNAL_COMMAND_NAMES } from "./runtime/internal-command-names.js";
 import { resolveCommand } from "./runtime/resolve-command.js";

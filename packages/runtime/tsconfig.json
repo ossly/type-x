@@ -5,11 +5,7 @@
     "outDir": "dist",
     "rootDir": ".",
     "noEmit": false,
-    "baseUrl": ".",
-    "paths": {
-      "@type-x/runtime": ["../packages/runtime/dist/src/index.d.ts"],
-      "@type-x/types": ["../packages/types/dist/src/index.d.ts"]
-    }
+    "baseUrl": "."
   },
   "include": ["src/**/*.ts"]
 }

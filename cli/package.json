@@ -13,11 +13,11 @@
     "access": "public"
   },
   "scripts": {
-    "build": "pnpm --filter @type-x/types build && tsc -p tsconfig.json",
+    "build": "pnpm --filter @type-x/runtime build && tsc -p tsconfig.json",
     "start": "node dist/src/cli.js",
     "smoke": "pnpm run build && node dist/src/cli.js hello",
     "lint": "eslint . --max-warnings 0",
-    "check-types": "pnpm --filter @type-x/types build && tsc --noEmit",
+    "check-types": "pnpm --filter @type-x/runtime build && tsc --noEmit",
     "test": "pnpm run build && node --test test/**/*.test.mjs"
   },
   "devDependencies": {
@@ -29,7 +29,6 @@
     "typescript": "5.9.2"
   },
   "dependencies": {
-    "@inquirer/prompts": "^8.4.1",
-    "ora": "^9.3.0"
+    "@type-x/runtime": "workspace:*"
   }
 }

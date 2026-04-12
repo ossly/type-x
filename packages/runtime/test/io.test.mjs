@@ -4,7 +4,7 @@ import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { createCommandIo } from "../dist/src/runtime/io.js";
+import { createCommandIo } from "../dist/src/index.js";
 
 test("createCommandIo.expandPath expands ~ and resolves relative paths", () => {
   const io = createCommandIo({

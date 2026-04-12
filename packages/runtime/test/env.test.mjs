@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { createCommandEnv } from "../dist/src/runtime/env.js";
+import { createCommandEnv } from "../dist/src/index.js";
 
 test("createCommandEnv.get returns defined values and hides empty values", () => {
   const env = createCommandEnv({

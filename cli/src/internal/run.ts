@@ -1,6 +1,6 @@
+import { createRequest } from "@type-x/runtime";
 import type { CommandHandler } from "@type-x/types";
 import { executeResolvedCommand } from "../runtime/execute-resolved-command.js";
-import { createRequest } from "../runtime/request.js";
 import { resolveLocalCommand } from "../runtime/resolve-local-command.js";
 
 export const run: CommandHandler = async ({ request }) => {

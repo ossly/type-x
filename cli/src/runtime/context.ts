@@ -1,39 +1,11 @@
-import type {
-  CommandContext,
-  CommandMetadata,
-  CommandRequest,
-} from "@type-x/types";
-import { createCommandStore } from "./command-store.js";
-import { createCommandEnv } from "./env.js";
-import { createCommandExec } from "./exec.js";
-import { createCommandGit } from "./git.js";
-import { createCommandIo } from "./io.js";
-import { createCommandUi } from "./ui.js";
+import { createCommandContext as createBaseCommandContext } from "@type-x/runtime";
+import type { CommandContext, CommandMetadata, CommandRequest } from "@type-x/types";
+import { getRuntimePaths } from "./paths.js";
 
 export const createCommandContext = (
   command: CommandMetadata,
   request: CommandRequest,
 ): CommandContext => {
-  const exec = createCommandExec({
-    cwd: request.pwd,
-    env: request.env,
-  });
-
-  return {
-    command,
-    request,
-    store: createCommandStore(command.packageName),
-    log: {
-      info: (...args: unknown[]) => console.log(...args),
-      warn: (...args: unknown[]) => console.warn(...args),
-      error: (...args: unknown[]) => console.error(...args),
-    },
-    ui: createCommandUi(),
-    exec,
-    git: createCommandGit(exec),
-    io: createCommandIo({
-      cwd: request.pwd,
-    }),
-    env: createCommandEnv(request.env),
-  };
+  const runtimeHomeDir = getRuntimePaths().homeDir;
+  return createBaseCommandContext(command, request, runtimeHomeDir);
 };

@@ -1,6 +1,6 @@
+import { createRequest } from "@type-x/runtime";
 import type { CommandHandler } from "@type-x/types";
 import { executeResolvedCommand } from "../runtime/execute-resolved-command.js";
-import { createRequest } from "../runtime/request.js";
 import { readRegistry } from "../runtime/registry.js";
 import { resolveCommand } from "../runtime/resolve-command.js";
 

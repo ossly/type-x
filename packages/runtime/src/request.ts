@@ -8,8 +8,12 @@ export const createRequest = (
   argv: string[],
   {
     invocationArgv = argv,
+    cwd = process.cwd(),
+    env = process.env,
   }: {
     invocationArgv?: string[];
+    cwd?: string;
+    env?: Record<string, string | undefined>;
   } = {},
 ): CommandRequest => {
   const parsedArgs = parseArgs({
@@ -28,8 +32,8 @@ export const createRequest = (
       raw: invocationArgv.join(" "),
       argv: invocationArgv,
     },
-    pwd: process.cwd(),
-    env: process.env,
+    pwd: cwd,
+    env,
   };
 };
 
