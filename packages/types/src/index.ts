@@ -9,11 +9,17 @@ export interface CommandStore<
   clear(): Promise<void>;
 }
 
+export interface CommandInvocation {
+  raw: string;
+  argv: string[];
+}
+
 export interface CommandRequest {
   raw: string;
   argv: string[];
   args: string[];
   flags: Record<string, string | boolean>;
+  invocation: CommandInvocation;
   pwd: string;
   env: Record<string, string | undefined>;
 }

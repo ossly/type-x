@@ -5,7 +5,7 @@ import { readRegistry } from "../runtime/registry.js";
 import { resolveCommand } from "../runtime/resolve-command.js";
 
 export const runAlias: CommandHandler = async ({ request }) => {
-  const [, aliasName, ...forwardedArgv] = request.argv;
+  const [aliasName, ...forwardedArgv] = request.argv;
 
   if (!aliasName) {
     throw new Error("Usage: x run-alias <alias-name> [...args]");
@@ -26,7 +26,9 @@ export const runAlias: CommandHandler = async ({ request }) => {
     );
   }
 
-  const aliasRequest = createRequest([aliasName, ...forwardedArgv]);
+  const aliasRequest = createRequest(forwardedArgv, {
+    invocationArgv: [aliasName, ...forwardedArgv],
+  });
 
   await executeResolvedCommand(resolvedCommand, aliasRequest, aliasName);
 };

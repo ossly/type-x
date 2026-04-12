@@ -10,31 +10,47 @@ test("createRequest parses argv, true positionals, flags, and pwd", () => {
   process.cwd = () => "/tmp/request-test";
 
   try {
-    const request = createRequest([
-      "hello-dev",
-      "--name",
-      "codex",
-      "-ab",
-      "value",
-      "--debug=true",
-    ]);
+    const request = createRequest(
+      ["--name", "codex", "-ab", "value", "--debug=true"],
+      {
+        invocationArgv: [
+          "hello-dev",
+          "--name",
+          "codex",
+          "-ab",
+          "value",
+          "--debug=true",
+        ],
+      },
+    );
 
-    assert.equal(request.raw, "hello-dev --name codex -ab value --debug=true");
     assert.deepEqual(request.argv, [
-      "hello-dev",
       "--name",
       "codex",
       "-ab",
       "value",
       "--debug=true",
     ]);
-    assert.deepEqual(request.args, ["hello-dev", "value"]);
+    assert.equal(request.raw, "--name codex -ab value --debug=true");
+    assert.deepEqual(request.args, ["value"]);
     assert.deepEqual(request.flags, {
       name: "codex",
       a: true,
       b: true,
       debug: "true",
     });
+    assert.equal(
+      request.invocation.raw,
+      "hello-dev --name codex -ab value --debug=true",
+    );
+    assert.deepEqual(request.invocation.argv, [
+      "hello-dev",
+      "--name",
+      "codex",
+      "-ab",
+      "value",
+      "--debug=true",
+    ]);
     assert.equal(request.pwd, "/tmp/request-test");
     assert.equal(request.env, process.env);
   } finally {
@@ -43,12 +59,22 @@ test("createRequest parses argv, true positionals, flags, and pwd", () => {
 });
 
 test("createRequest supports short flags with values and preserves raw argv", () => {
-  const request = createRequest(["hello-dev", "-n", "codex", "--", "--literal"]);
+  const request = createRequest(["-n", "codex", "--", "--literal"], {
+    invocationArgv: ["hello-dev", "-n", "codex", "--", "--literal"],
+  });
 
-  assert.equal(request.raw, "hello-dev -n codex -- --literal");
-  assert.deepEqual(request.argv, ["hello-dev", "-n", "codex", "--", "--literal"]);
-  assert.deepEqual(request.args, ["hello-dev", "--literal"]);
+  assert.equal(request.raw, "-n codex -- --literal");
+  assert.deepEqual(request.argv, ["-n", "codex", "--", "--literal"]);
+  assert.deepEqual(request.args, ["--literal"]);
   assert.deepEqual(request.flags, {
     n: "codex",
   });
+  assert.equal(request.invocation.raw, "hello-dev -n codex -- --literal");
+  assert.deepEqual(request.invocation.argv, [
+    "hello-dev",
+    "-n",
+    "codex",
+    "--",
+    "--literal",
+  ]);
 });

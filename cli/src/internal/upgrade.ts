@@ -2,7 +2,7 @@ import type { CommandHandler } from "@type-x/types";
 import { installPackage } from "../install/install-package.js";
 
 export const upgrade: CommandHandler = async ({ request, ui }) => {
-  const [, rawSpecifier] = request.argv;
+  const [rawSpecifier] = request.argv;
 
   if (!rawSpecifier) {
     throw new Error("Usage: x upgrade <package-name-or-path>");

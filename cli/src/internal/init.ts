@@ -4,7 +4,7 @@ import { basename, join, resolve } from "node:path";
 import type { CommandHandler } from "@type-x/types";
 
 export const init: CommandHandler = async ({ request }) => {
-  const [, maybePath] = request.argv;
+  const [maybePath] = request.argv;
   const useTypeScript = Boolean(request.flags.ts);
   const targetPath = resolve(request.pwd, maybePath ?? ".");
   const packageName = getPackageName(targetPath);

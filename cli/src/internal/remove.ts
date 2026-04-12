@@ -2,7 +2,7 @@ import type { CommandHandler } from "@type-x/types";
 import { removePackage } from "../install/remove-package.js";
 
 export const remove: CommandHandler = async ({ request, ui }) => {
-  const [, packageName] = request.argv;
+  const [packageName] = request.argv;
 
   if (!packageName) {
     throw new Error("Usage: x remove <package-name>");

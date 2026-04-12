@@ -3,7 +3,7 @@ import { installPackage } from "../install/install-package.js";
 import { printCommandTable, type CommandRow } from "./command-table.js";
 
 export const add: CommandHandler = async ({ request, ui }) => {
-  const [, rawSpecifier] = request.argv;
+  const [rawSpecifier] = request.argv;
 
   if (!rawSpecifier) {
     throw new Error("Usage: x add <package-name-or-path>");

@@ -4,7 +4,14 @@ import type { CommandRequest } from "@type-x/types";
 
 export type { CommandRequest } from "@type-x/types";
 
-export const createRequest = (argv: string[]): CommandRequest => {
+export const createRequest = (
+  argv: string[],
+  {
+    invocationArgv = argv,
+  }: {
+    invocationArgv?: string[];
+  } = {},
+): CommandRequest => {
   const parsedArgs = parseArgs({
     args: argv,
     options: inferOptions(argv),
@@ -17,6 +24,10 @@ export const createRequest = (argv: string[]): CommandRequest => {
     argv,
     args: parsedArgs.positionals,
     flags: normalizeFlags(parsedArgs.values),
+    invocation: {
+      raw: invocationArgv.join(" "),
+      argv: invocationArgv,
+    },
     pwd: process.cwd(),
     env: process.env,
   };

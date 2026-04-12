@@ -9,11 +9,14 @@ import { INTERNAL_COMMAND_NAMES } from "./runtime/internal-command-names.js";
 import { resolveCommand } from "./runtime/resolve-command.js";
 
 const main = async (argv: string[]): Promise<void> => {
-  const request = createRequest(argv);
   const command = argv[0] ?? INTERNAL_COMMAND_NAMES.HELP;
   const internalCommand = internalCommands[command];
 
   if (internalCommand) {
+    const request = createRequest(command === argv[0] ? argv.slice(1) : [], {
+      invocationArgv: argv,
+    });
+
     return executeCommand({
       command: {
         name: command,
@@ -28,6 +31,10 @@ const main = async (argv: string[]): Promise<void> => {
   const resolvedCommand = await resolveCommand(command);
 
   if (resolvedCommand) {
+    const request = createRequest(argv.slice(1), {
+      invocationArgv: argv,
+    });
+
     return executeResolvedCommand(resolvedCommand, request);
   }
 
@@ -41,11 +48,13 @@ const main = async (argv: string[]): Promise<void> => {
       throw new Error("Internal alias runner is not available.");
     }
 
-    const aliasRequest = createRequest([
-      INTERNAL_COMMAND_NAMES.RUN_ALIAS,
-      command,
-      ...argv.slice(1),
-    ]);
+    const aliasRequest = createRequest([command, ...argv.slice(1)], {
+      invocationArgv: [
+        INTERNAL_COMMAND_NAMES.RUN_ALIAS,
+        command,
+        ...argv.slice(1),
+      ],
+    });
 
     return executeCommand({
       command: {

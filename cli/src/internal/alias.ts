@@ -3,7 +3,7 @@ import { registerAlias } from "../alias/register-alias.js";
 import { getShellSetupMessage } from "../shell/setup-shell.js";
 
 export const alias: CommandHandler = async ({ request }) => {
-  const [, assignment] = request.argv;
+  const [assignment] = request.argv;
 
   if (!assignment) {
     throw new Error("Usage: x alias <alias-name>=<command-name>");
