@@ -12,7 +12,10 @@ const cliEntrypoint = resolve(process.cwd(), "dist/src/cli.js");
 
 test("x run executes a local package command", async () => {
   const xHome = await mkdtemp(join(tmpdir(), "type-x-cli-run-"));
-  const packagePath = resolve(process.cwd(), "../examples/hello-tools");
+  const {
+    packagePath,
+    packageName,
+  } = await createJavaScriptFixturePackage();
 
   const result = await execFileAsync(
     "node",
@@ -28,13 +31,16 @@ test("x run executes a local package command", async () => {
 
   assert.match(result.stdout, /hello from local package/);
   assert.match(result.stdout, /command: hello-dev/);
-  assert.match(result.stdout, /@examples\/hello-tools@0.0.0/);
+  assert.match(result.stdout, new RegExp(`${escapeRegExp(packageName)}@0\\.0\\.0`));
   assert.match(result.stdout, /runs: 1/);
 });
 
-test("x run executes the TypeScript example package", async () => {
+test("x run executes a TypeScript package", async () => {
   const xHome = await mkdtemp(join(tmpdir(), "type-x-cli-run-ts-"));
-  const packagePath = resolve(process.cwd(), "../examples/hello-tools-ts");
+  const {
+    packagePath,
+    packageName,
+  } = await createTypeScriptFixturePackage();
 
   const result = await execFileAsync(
     "node",
@@ -50,7 +56,7 @@ test("x run executes the TypeScript example package", async () => {
 
   assert.match(result.stdout, /hello from typed package/);
   assert.match(result.stdout, /command: hello-ts/);
-  assert.match(result.stdout, /@examples\/hello-tools-ts@0.0.0/);
+  assert.match(result.stdout, new RegExp(`${escapeRegExp(packageName)}@0\\.0\\.0`));
   assert.match(result.stdout, /runs: 1/);
   assert.match(result.stdout, /name: itaibo/);
   assert.match(result.stdout, /storedName: itaibo/);
@@ -58,7 +64,10 @@ test("x run executes the TypeScript example package", async () => {
 
 test("x add installs a package and x remove deletes it", async () => {
   const xHome = await mkdtemp(join(tmpdir(), "type-x-cli-add-remove-"));
-  const packagePath = resolve(process.cwd(), "../examples/hello-tools");
+  const {
+    packagePath,
+    packageName,
+  } = await createJavaScriptFixturePackage();
 
   const addResult = await execFileAsync(
     "node",
@@ -72,12 +81,23 @@ test("x add installs a package and x remove deletes it", async () => {
     },
   );
 
-  assert.match(addResult.stdout, /Installed @examples\/hello-tools@0.0.0/);
+  assert.match(
+    addResult.stdout,
+    new RegExp(`Installed ${escapeRegExp(packageName)}@0\\.0\\.0`),
+  );
   assert.match(addResult.stdout, /\[ \] Installing/);
   assert.match(addResult.stdout, /\[ \] Packing package:/);
-  assert.match(addResult.stdout, /\[ok\] Installed @examples\/hello-tools@0.0.0/);
+  assert.match(
+    addResult.stdout,
+    new RegExp(`\\[ok\\] Installed ${escapeRegExp(packageName)}@0\\.0\\.0`),
+  );
   assert.match(addResult.stdout, /COMMAND\s+PACKAGE\s+VERSION\s+DESCRIPTION/);
-  assert.match(addResult.stdout, /hello-dev\s+@examples\/hello-tools\s+0.0.0\s+Example local development command/);
+  assert.match(
+    addResult.stdout,
+    new RegExp(
+      `hello-dev\\s+${escapeRegExp(packageName)}\\s+0\\.0\\.0\\s+Example local development command`,
+    ),
+  );
 
   const lsAfterAdd = await execFileAsync("node", [cliEntrypoint, "ls"], {
     cwd: process.cwd(),
@@ -112,13 +132,13 @@ test("x add installs a package and x remove deletes it", async () => {
   const storeFilePath = join(
     xHome,
     "stores",
-    "@examples__hello-tools.json",
+    getStoreFileName(packageName),
   );
   await access(storeFilePath);
 
   const removeResult = await execFileAsync(
     "node",
-    [cliEntrypoint, "remove", "@examples/hello-tools"],
+    [cliEntrypoint, "remove", packageName],
     {
       cwd: process.cwd(),
       env: {
@@ -128,8 +148,14 @@ test("x add installs a package and x remove deletes it", async () => {
     },
   );
 
-  assert.match(removeResult.stdout, /Removed @examples\/hello-tools\./);
-  assert.match(removeResult.stdout, /\[ok\] Removed @examples\/hello-tools/);
+  assert.match(
+    removeResult.stdout,
+    new RegExp(`Removed ${escapeRegExp(packageName)}\\.`),
+  );
+  assert.match(
+    removeResult.stdout,
+    new RegExp(`\\[ok\\] Removed ${escapeRegExp(packageName)}`),
+  );
 
   const lsAfterRemove = await execFileAsync("node", [cliEntrypoint, "ls"], {
     cwd: process.cwd(),
@@ -174,50 +200,15 @@ test("x add installs a package and x remove deletes it", async () => {
 
 test("x upgrade replaces an installed package version", async () => {
   const xHome = await mkdtemp(join(tmpdir(), "type-x-cli-upgrade-"));
-  const originalPackagePath = resolve(process.cwd(), "../examples/hello-tools");
-  const upgradedPackageRoot = await mkdtemp(
-    join(tmpdir(), "type-x-upgrade-package-"),
-  );
-  const upgradedPackagePath = join(upgradedPackageRoot, "hello-tools");
+  const originalPackage = await createJavaScriptFixturePackage();
+  const upgradedPackage = await createJavaScriptFixturePackage({
+    packageName: originalPackage.packageName,
+    version: "0.0.1",
+    description: "Example upgraded command",
+    greeting: "hello from upgraded package",
+  });
 
-  await mkdir(join(upgradedPackagePath, "dist"), { recursive: true });
-  await writeFile(
-    join(upgradedPackagePath, "package.json"),
-    JSON.stringify(
-      {
-        name: "@examples/hello-tools",
-        version: "0.0.1",
-        type: "module",
-        x: {
-          runtime: "1",
-          commands: {
-            "hello-dev": {
-              entry: "./dist/hello.js",
-              description: "Example upgraded command",
-            },
-          },
-        },
-      },
-      null,
-      2,
-    ),
-  );
-  await writeFile(
-    join(upgradedPackagePath, "dist/hello.js"),
-    [
-      "export default async function main(context) {",
-      '  const previousRuns = (await context.store.get("runs")) ?? 0;',
-      "  const runs = Number(previousRuns) + 1;",
-      '  await context.store.set("runs", runs);',
-      '  context.log.info("hello from upgraded package");',
-      "  context.log.info(`package: ${context.command.packageName}@${context.command.version}`);",
-      "  context.log.info(`runs: ${runs}`);",
-      "}",
-      "",
-    ].join("\n"),
-  );
-
-  await execFileAsync("node", [cliEntrypoint, "add", originalPackagePath], {
+  await execFileAsync("node", [cliEntrypoint, "add", originalPackage.packagePath], {
     cwd: process.cwd(),
     env: {
       ...process.env,
@@ -241,7 +232,7 @@ test("x upgrade replaces an installed package version", async () => {
 
   const upgradeResult = await execFileAsync(
     "node",
-    [cliEntrypoint, "upgrade", upgradedPackagePath],
+    [cliEntrypoint, "upgrade", upgradedPackage.packagePath],
     {
       cwd: process.cwd(),
       env: {
@@ -251,10 +242,16 @@ test("x upgrade replaces an installed package version", async () => {
     },
   );
 
-  assert.match(upgradeResult.stdout, /Upgraded @examples\/hello-tools to 0.0.1/);
+  assert.match(
+    upgradeResult.stdout,
+    new RegExp(`Upgraded ${escapeRegExp(originalPackage.packageName)} to 0\\.0\\.1`),
+  );
   assert.match(upgradeResult.stdout, /\[ \] Upgrading/);
   assert.match(upgradeResult.stdout, /\[ \] Replacing installed package:/);
-  assert.match(upgradeResult.stdout, /\[ok\] Upgraded @examples\/hello-tools to 0.0.1/);
+  assert.match(
+    upgradeResult.stdout,
+    new RegExp(`\\[ok\\] Upgraded ${escapeRegExp(originalPackage.packageName)} to 0\\.0\\.1`),
+  );
 
   const runResult = await execFileAsync(
     "node",
@@ -269,13 +266,18 @@ test("x upgrade replaces an installed package version", async () => {
   );
 
   assert.match(runResult.stdout, /hello from upgraded package/);
-  assert.match(runResult.stdout, /@examples\/hello-tools@0.0.1/);
+  assert.match(
+    runResult.stdout,
+    new RegExp(`${escapeRegExp(originalPackage.packageName)}@0\\.0\\.1`),
+  );
   assert.match(runResult.stdout, /runs: 2/);
 });
 
 test("x alias creates an alias that executes the target command and x unalias removes it", async () => {
   const xHome = await mkdtemp(join(tmpdir(), "type-x-cli-alias-"));
-  const packagePath = resolve(process.cwd(), "../examples/hello-tools");
+  const {
+    packagePath,
+  } = await createJavaScriptFixturePackage();
 
   await execFileAsync("node", [cliEntrypoint, "add", packagePath], {
     cwd: process.cwd(),
@@ -355,7 +357,9 @@ test("x alias creates an alias that executes the target command and x unalias re
 
 test("x alias allows exposing an installed command under the same global name", async () => {
   const xHome = await mkdtemp(join(tmpdir(), "type-x-cli-alias-same-name-"));
-  const packagePath = resolve(process.cwd(), "../examples/hello-tools");
+  const {
+    packagePath,
+  } = await createJavaScriptFixturePackage();
 
   await execFileAsync("node", [cliEntrypoint, "add", packagePath], {
     cwd: process.cwd(),
@@ -422,7 +426,9 @@ test("x setup-shell adds ~/.x/bin to the detected shell rc file", async () => {
 
 test("command store persists across repeated installed command runs", async () => {
   const xHome = await mkdtemp(join(tmpdir(), "type-x-cli-store-"));
-  const packagePath = resolve(process.cwd(), "../examples/hello-tools");
+  const {
+    packagePath,
+  } = await createJavaScriptFixturePackage();
 
   await execFileAsync("node", [cliEntrypoint, "add", packagePath], {
     cwd: process.cwd(),
@@ -582,7 +588,9 @@ test("x init --standalone scaffolds a standalone TypeScript CLI", async () => {
 test("x doctor reports shell and registry status", async () => {
   const homeDir = await mkdtemp(join(tmpdir(), "type-x-cli-doctor-home-"));
   const xHome = join(homeDir, ".x");
-  const packagePath = resolve(process.cwd(), "../examples/hello-tools");
+  const {
+    packagePath,
+  } = await createJavaScriptFixturePackage();
 
   await execFileAsync("node", [cliEntrypoint, "add", packagePath], {
     cwd: process.cwd(),
@@ -616,3 +624,196 @@ test("x doctor reports shell and registry status", async () => {
   assert.match(result.stdout, /isRepository: yes/);
   assert.match(result.stdout, /repoName: type-x/);
 });
+
+const createJavaScriptFixturePackage = async ({
+  packageName = "@test/hello-tools",
+  commandName = "hello-dev",
+  version = "0.0.0",
+  description = "Example local development command",
+  greeting = "hello from local package",
+} = {}) => {
+  const packagePath = await mkdtemp(join(tmpdir(), "type-x-fixture-js-"));
+
+  await mkdir(join(packagePath, "dist"), { recursive: true });
+  await writeFile(
+    join(packagePath, "package.json"),
+    JSON.stringify(
+      {
+        name: packageName,
+        version,
+        type: "module",
+        x: {
+          runtime: "1",
+          commands: {
+            [commandName]: {
+              entry: "./dist/hello.js",
+              description,
+            },
+          },
+        },
+      },
+      null,
+      2,
+    ) + "\n",
+  );
+  await writeFile(
+    join(packagePath, "dist/hello.js"),
+    createFixtureCommandModule({
+      greeting,
+      includeStoredName: false,
+    }),
+  );
+
+  return {
+    packagePath,
+    packageName,
+    commandName,
+  };
+};
+
+const createTypeScriptFixturePackage = async ({
+  packageName = "@test/hello-tools-ts",
+  commandName = "hello-ts",
+  version = "0.0.0",
+  description = "Example typed command",
+  greeting = "hello from typed package",
+} = {}) => {
+  const packagePath = await mkdtemp(join(tmpdir(), "type-x-fixture-ts-"));
+
+  await mkdir(join(packagePath, "src"), { recursive: true });
+  await mkdir(join(packagePath, "dist"), { recursive: true });
+  await writeFile(
+    join(packagePath, "package.json"),
+    JSON.stringify(
+      {
+        name: packageName,
+        version,
+        type: "module",
+        scripts: {
+          build: "tsc -p tsconfig.json",
+        },
+        devDependencies: {
+          "@type-x/types": "latest",
+          "@types/node": "^25.6.0",
+          typescript: "^5.9.2",
+        },
+        x: {
+          runtime: "1",
+          commands: {
+            [commandName]: {
+              entry: "./dist/hello.js",
+              description,
+            },
+          },
+        },
+      },
+      null,
+      2,
+    ) + "\n",
+  );
+  await writeFile(
+    join(packagePath, "tsconfig.json"),
+    JSON.stringify(
+      {
+        $schema: "https://json.schemastore.org/tsconfig",
+        compilerOptions: {
+          lib: ["es2022"],
+          module: "NodeNext",
+          moduleResolution: "NodeNext",
+          strict: true,
+          target: "ES2022",
+          outDir: "dist",
+          rootDir: ".",
+          types: ["node"],
+        },
+        include: ["src/**/*.ts"],
+      },
+      null,
+      2,
+    ) + "\n",
+  );
+  await writeFile(
+    join(packagePath, "src/hello.ts"),
+    [
+      'import type { CommandContext } from "@type-x/types";',
+      "",
+      "type Store = {",
+      "  runs: number;",
+      "  name?: string;",
+      "};",
+      "",
+      "export default async function main(",
+      "  context: CommandContext<Store>,",
+      "): Promise<void> {",
+      '  const previousRuns = (await context.store.get("runs")) ?? 0;',
+      "  const runs = previousRuns + 1;",
+      "",
+      '  await context.store.set("runs", runs);',
+      "",
+      '  context.log.info("hello from typed package");',
+      "  context.log.info(`command: ${context.command.name}`);",
+      "}",
+      "",
+    ].join("\n"),
+  );
+  await writeFile(
+    join(packagePath, "dist/hello.js"),
+    createFixtureCommandModule({
+      greeting,
+      includeStoredName: true,
+    }),
+  );
+
+  return {
+    packagePath,
+    packageName,
+    commandName,
+  };
+};
+
+const createFixtureCommandModule = ({
+  greeting,
+  includeStoredName,
+}) => {
+  return [
+    "const getName = (value) => {",
+    '  return typeof value === "string" ? value : undefined;',
+    "};",
+    "",
+    "export default async function main(context) {",
+    '  const previousRuns = (await context.store.get("runs")) ?? 0;',
+    "  const runs = Number(previousRuns) + 1;",
+    "  const name = getName(context.request.flags.name);",
+    "",
+    '  await context.store.set("runs", runs);',
+    "",
+    "  if (name) {",
+    '    await context.store.set("name", name);',
+    "  }",
+    "",
+    "  const storedState = await context.store.all();",
+    "",
+    `  context.log.info(${JSON.stringify(greeting)});`,
+    "  context.log.info(`command: ${context.command.name}`);",
+    "  context.log.info(`package: ${context.command.packageName}@${context.command.version}`);",
+    "  context.log.info(`runs: ${runs}`);",
+    "",
+    "  if (name) {",
+    "    context.log.info(`name: ${name}`);",
+    "  }",
+    "",
+    includeStoredName
+      ? '  context.log.info(`storedName: ${storedState.name ?? "none"}`);'
+      : "  void storedState;",
+    "}",
+    "",
+  ].join("\n");
+};
+
+const getStoreFileName = (packageName) => {
+  return `${packageName.replaceAll("/", "__")}.json`;
+};
+
+const escapeRegExp = (value) => {
+  return value.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&");
+};

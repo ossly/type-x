@@ -1,37 +1,57 @@
 # type-x
 
-A simple CLI runtime for installable command packages.
+Monorepo for the `x` command runtime, the standalone runtime package, and the shared types.
 
-## Structure
+## Packages
 
-- `cli`: main `type-x` CLI package, `@type-x/cli`
-- `packages/typescript-config`: shared TypeScript config
-- `packages/eslint-config`: shared ESLint config
+- `cli`
+  Published as `@type-x/cli`. This is the `x` binary.
+- `packages/runtime`
+  Published as `@type-x/runtime`. Use this to build a standalone CLI with the same runtime context.
+- `packages/types`
+  Published as `@type-x/types`. Shared runtime-facing types.
 
-## Local development
+## Local Development
 
-To test the CLI locally, the simplest workflow is to run TypeScript in watch mode and use a shell alias with a different name.
+Install workspace dependencies:
 
-1. Start the build in watch mode:
+```sh
+pnpm install
+```
+
+Build everything once:
+
+```sh
+pnpm build
+```
+
+The usual CLI loop is:
 
 ```sh
 pnpm --filter @type-x/cli build --watch
+alias x-dev='node /absolute/path/to/type-x/cli/dist/src/cli.js'
 ```
 
-2. Create a local alias pointing to the compiled file:
+Then use it like:
 
 ```sh
-alias x-dev='node /...path/type-x/cli/dist/src/cli.js'
+x-dev --help
+x-dev init demo
+x-dev init demo-standalone --standalone
 ```
 
-3. Run the CLI with that alias:
+Useful package-level commands:
 
 ```sh
-x-dev
-x-dev hello
-x-dev add foo
+pnpm --filter @type-x/runtime test
+pnpm --filter @type-x/cli test
+pnpm --filter @type-x/cli lint
+pnpm --filter @type-x/runtime lint
 ```
 
-If you want the alias to persist across shell sessions, add it to your `~/.zshrc`.
+## How It Fits Together
 
-This keeps the published binary name as `x`, while letting you iterate locally with `x-dev` without conflicts.
+- `@type-x/cli` installs and runs `x` packages declared through the `x` field in `package.json`
+- `@type-x/runtime` is for normal npm CLIs that want the same injected context without requiring global `x`
+- `@type-x/types` keeps the runtime contract small and shareable
+

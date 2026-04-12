@@ -20,12 +20,9 @@ importers:
 
   cli:
     dependencies:
-      '@inquirer/prompts':
-        specifier: ^8.4.1
-        version: 8.4.1(@types/node@25.6.0)
-      ora:
-        specifier: ^9.3.0
-        version: 9.3.0
+      '@type-x/runtime':
+        specifier: workspace:*
+        version: link:../packages/runtime
     devDependencies:
       '@type-x/eslint-config':
         specifier: workspace:*
@@ -46,19 +43,33 @@ importers:
         specifier: 5.9.2
         version: 5.9.2
 
-  examples/hello-tools: {}
-
-  examples/hello-tools-ts:
-    devDependencies:
+  packages/runtime:
+    dependencies:
+      '@inquirer/prompts':
+        specifier: ^8.4.1
+        version: 8.4.1(@types/node@25.6.0)
       '@type-x/types':
         specifier: workspace:*
-        version: link:../../packages/types
+        version: link:../types
+      ora:
+        specifier: ^9.3.0
+        version: 9.3.0
+    devDependencies:
+      '@type-x/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
       '@type-x/typescript-config':
         specifier: workspace:*
-        version: link:../../packages/typescript-config
+        version: link:../typescript-config
       '@types/node':
         specifier: ^25.6.0
         version: 25.6.0
+      eslint:
+        specifier: ^9.39.1
+        version: 9.39.4
+      typescript:
+        specifier: 5.9.2
+        version: 5.9.2
 
   packages/eslint-config:
     devDependencies:
