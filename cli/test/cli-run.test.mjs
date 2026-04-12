@@ -488,7 +488,10 @@ test("x doctor reports shell and registry status", async () => {
   assert.match(result.stdout, /Paths/);
   assert.match(result.stdout, /Shell/);
   assert.match(result.stdout, /Registry/);
+  assert.match(result.stdout, /Git/);
   assert.match(result.stdout, /packages: 1/);
   assert.match(result.stdout, /commands: 1/);
   assert.match(result.stdout, /aliases: 0/);
+  assert.match(result.stdout, /isRepository: yes/);
+  assert.match(result.stdout, /repoName: type-x/);
 });

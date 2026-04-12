@@ -1,12 +1,15 @@
+import { access } from "node:fs/promises";
+
 import type { CommandHandler } from "@type-x/types";
 import { getAliasShimPath } from "../alias/alias-shim.js";
 import { ensureRuntimeDirs } from "../runtime/paths.js";
 import { readRegistry, writeRegistry } from "../runtime/registry.js";
 import { getShellSetupSuggestion } from "../shell/setup-shell.js";
 
-export const doctor: CommandHandler = async ({ request }) => {
+export const doctor: CommandHandler = async ({ request, git }) => {
   const paths = await ensureRuntimeDirs();
   const registry = await readRegistry();
+  const gitInfo = await git.getInfo();
   const shellSetup = getShellSetupSuggestion();
   const aliasNames = Object.keys(registry.aliases).sort();
   const missingAliasShims: string[] = [];
@@ -17,7 +20,7 @@ export const doctor: CommandHandler = async ({ request }) => {
     const shimPath = await getAliasShimPath(aliasName);
 
     try {
-      await import("node:fs/promises").then(({ access }) => access(shimPath));
+      await access(shimPath);
     } catch {
       missingAliasShims.push(aliasName);
     }
@@ -49,5 +52,15 @@ export const doctor: CommandHandler = async ({ request }) => {
   console.log(`  missingAliasShims: ${missingAliasShims.length}`);
   if (missingAliasShims.length > 0) {
     console.log(`  missingAliasShimNames: ${missingAliasShims.join(", ")}`);
+  }
+  console.log("");
+  console.log("Git");
+  console.log(`  isRepository: ${gitInfo.isRepository ? "yes" : "no"}`);
+  if (gitInfo.isRepository) {
+    console.log(`  rootDir: ${gitInfo.rootDir ?? "unknown"}`);
+    console.log(`  branch: ${gitInfo.branch ?? "detached"}`);
+    console.log(`  originUrl: ${gitInfo.originUrl ?? "none"}`);
+    console.log(`  repoName: ${gitInfo.repoName ?? "unknown"}`);
+    console.log(`  detachedHead: ${gitInfo.isDetachedHead ? "yes" : "no"}`);
   }
 };

@@ -64,6 +64,19 @@ export interface CommandExec {
   ): Promise<CommandExecResult>;
 }
 
+export interface CommandGitInfo {
+  isRepository: boolean;
+  rootDir?: string;
+  branch?: string;
+  originUrl?: string;
+  repoName?: string;
+  isDetachedHead?: boolean;
+}
+
+export interface CommandGit {
+  getInfo(): Promise<CommandGitInfo>;
+}
+
 export interface CommandContext<
   TStore extends Record<string, unknown> = Record<string, unknown>,
 > {
@@ -73,6 +86,7 @@ export interface CommandContext<
   log: CommandLog;
   ui: CommandUi;
   exec: CommandExec;
+  git: CommandGit;
 }
 
 export type CommandHandler<
