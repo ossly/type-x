@@ -4,6 +4,7 @@ import type {
   CommandExecResult,
 } from "@type-x/types";
 import { spawn } from "node:child_process";
+import process from "node:process";
 
 export const createCommandExec = ({
   cwd,
@@ -14,7 +15,6 @@ export const createCommandExec = ({
 }): CommandExec => {
   return async (
     command: string,
-    args: string[] = [],
     options: CommandExecOptions = {},
   ): Promise<CommandExecResult> => {
     const finalCwd = options.cwd ?? cwd;
@@ -22,11 +22,13 @@ export const createCommandExec = ({
       ...env,
       ...options.env,
     };
+    const silent = options.silent ?? false;
 
     return new Promise<CommandExecResult>((resolve, reject) => {
-      const child = spawn(command, args, {
+      const child = spawn(command, {
         cwd: finalCwd,
         env: finalEnv,
+        shell: true,
         stdio: "pipe",
       });
 
@@ -34,11 +36,21 @@ export const createCommandExec = ({
       let stderr = "";
 
       child.stdout.on("data", (chunk: Buffer | string) => {
-        stdout += chunk.toString();
+        const text = chunk.toString();
+        stdout += text;
+
+        if (!silent) {
+          process.stdout.write(text);
+        }
       });
 
       child.stderr.on("data", (chunk: Buffer | string) => {
-        stderr += chunk.toString();
+        const text = chunk.toString();
+        stderr += text;
+
+        if (!silent) {
+          process.stderr.write(text);
+        }
       });
 
       child.on("error", (error) => {
@@ -52,7 +64,7 @@ export const createCommandExec = ({
           stderr,
         };
 
-        if ((options.rejectOnNonZero ?? true) && result.exitCode !== 0) {
+        if ((options.throwOnError ?? true) && result.exitCode !== 0) {
           reject(
             new Error(
               `Command "${command}" exited with code ${result.exitCode}: ${stderr || stdout}`.trim(),

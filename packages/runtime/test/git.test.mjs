@@ -50,12 +50,10 @@ test("createCommandGit returns repository details when inside a git repo", async
     env: process.env,
   });
 
-  await exec("git", ["init"], {
-    rejectOnNonZero: true,
-  });
-  await exec("git", ["remote", "add", "origin", "https://github.com/example/demo-repo.git"], {
-    rejectOnNonZero: true,
-  });
+  await exec("git init");
+  await exec(
+    "git remote add origin https://github.com/example/demo-repo.git",
+  );
 
   const git = createCommandGit(exec);
   const info = await git.getInfo();

@@ -53,7 +53,8 @@ export interface CommandExecOptions {
   cwd?: string;
   env?: Record<string, string | undefined>;
   input?: string;
-  rejectOnNonZero?: boolean;
+  silent?: boolean;
+  throwOnError?: boolean;
 }
 
 export interface CommandExecResult {
@@ -65,7 +66,6 @@ export interface CommandExecResult {
 export interface CommandExec {
   (
     command: string,
-    args?: string[],
     options?: CommandExecOptions,
   ): Promise<CommandExecResult>;
 }

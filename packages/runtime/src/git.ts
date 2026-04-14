@@ -13,10 +13,7 @@ export const createCommandGit = (exec: CommandExec): CommandGit => {
 };
 
 const readGitInfo = async (exec: CommandExec): Promise<CommandGitInfo> => {
-  const insideWorkTree = await runGit(exec, [
-    "rev-parse",
-    "--is-inside-work-tree",
-  ]);
+  const insideWorkTree = await runGit(exec, "git rev-parse --is-inside-work-tree");
 
   if (!insideWorkTree.ok || insideWorkTree.stdout.trim() !== "true") {
     return {
@@ -24,9 +21,9 @@ const readGitInfo = async (exec: CommandExec): Promise<CommandGitInfo> => {
     };
   }
 
-  const rootDirResult = await runGit(exec, ["rev-parse", "--show-toplevel"]);
-  const branchResult = await runGit(exec, ["branch", "--show-current"]);
-  const originUrlResult = await runGit(exec, ["remote", "get-url", "origin"]);
+  const rootDirResult = await runGit(exec, "git rev-parse --show-toplevel");
+  const branchResult = await runGit(exec, "git branch --show-current");
+  const originUrlResult = await runGit(exec, "git remote get-url origin");
 
   const rootDir = getTrimmedOutput(rootDirResult);
   const branch = getTrimmedOutput(branchResult);
@@ -45,7 +42,7 @@ const readGitInfo = async (exec: CommandExec): Promise<CommandGitInfo> => {
 
 const runGit = async (
   exec: CommandExec,
-  args: string[],
+  command: string,
 ): Promise<
   | {
       ok: true;
@@ -59,8 +56,9 @@ const runGit = async (
     }
 > => {
   try {
-    const result = await exec("git", args, {
-      rejectOnNonZero: false,
+    const result = await exec(command, {
+      throwOnError: false,
+      silent: true,
     });
 
     if (result.exitCode !== 0) {
@@ -77,14 +75,6 @@ const runGit = async (
       stderr: result.stderr,
     };
   } catch (error: unknown) {
-    if (isMissingCommandError(error)) {
-      return {
-        ok: false,
-        stdout: "",
-        stderr: "",
-      };
-    }
-
     return {
       ok: false,
       stdout: "",
@@ -134,10 +124,6 @@ const parseRepoNameFromOrigin = (originUrl: string): string | undefined => {
   const repoName = segments.at(-1);
 
   return repoName && repoName.length > 0 ? repoName : undefined;
-};
-
-const isMissingCommandError = (error: unknown): error is NodeJS.ErrnoException => {
-  return error instanceof Error && "code" in error && error.code === "ENOENT";
 };
 
 const getErrorMessage = (error: unknown): string => {

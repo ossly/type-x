@@ -17,8 +17,14 @@ async function main(context: CommandContext<Store>): Promise<void> {
   const runs = (await context.store.get("runs")) ?? 0;
   await context.store.set("runs", runs + 1);
 
+  const gitStatus = await context.exec("git status --short", {
+    throwOnError: false,
+    silent: true,
+  });
+
   context.log.info(`command: ${context.command.name}`);
   context.log.info(`runs: ${runs + 1}`);
+  context.log.info(`git status exit code: ${gitStatus.exitCode}`);
 }
 
 initCli(main);
@@ -37,6 +43,21 @@ The injected context exposes:
 - `git`
 - `io`
 - `env`
+
+## Exec
+
+`context.exec()` runs a shell command string and returns:
+
+- `exitCode`
+- `stdout`
+- `stderr`
+
+Options include:
+
+- `silent`
+  When `false`, stream command output to the current process stdout/stderr. This is the default.
+- `throwOnError`
+  When `false`, return non-zero exit codes instead of throwing.
 
 ## Default Store Location
 
