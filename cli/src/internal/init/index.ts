@@ -6,6 +6,7 @@ import {
   createInitTemplate,
   type InitTemplateKind,
 } from "./templates.js";
+import { readCliPackageVersion } from "../../runtime/cli-package.js";
 
 export const init: CommandHandler = async ({ request, ui, log }) => {
   const [maybePath] = request.args;
@@ -25,10 +26,12 @@ export const init: CommandHandler = async ({ request, ui, log }) => {
     message: "Command name",
     defaultValue: defaultCommandName,
   });
+  const typexVersion = await readCliPackageVersion();
   const template = createInitTemplate({
     kind: templateKind,
     packageName,
     commandName,
+    typexVersion,
   });
 
   await assertTemplateFilesDoNotExist(targetPath, template.files);

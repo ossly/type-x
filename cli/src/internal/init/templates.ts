@@ -12,15 +12,18 @@ export const createInitTemplate = ({
   kind,
   packageName,
   commandName,
+  typexVersion,
 }: {
   kind: InitTemplateKind;
   packageName: string;
   commandName: string;
+  typexVersion: string;
 }): InitTemplate => {
   const values = {
     PACKAGE_NAME: packageName,
     COMMAND_NAME: commandName,
     COMMAND_DESCRIPTION: `Say hello from ${commandName}`,
+    TYPEX_VERSION: typexVersion,
   };
 
   if (kind === "standalone") {
@@ -98,7 +101,7 @@ const X_PACKAGE_JSON_TEMPLATE = [
   '    "check-types": "tsc -p tsconfig.json --noEmit"',
   "  },",
   '  "devDependencies": {',
-  '    "@type-x/types": "latest",',
+  '    "@type-x/types": "{{TYPEX_VERSION}}",',
   '    "@types/node": "^25.6.0",',
   '    "typescript": "^5.9.2"',
   "  },",
@@ -129,7 +132,7 @@ const STANDALONE_PACKAGE_JSON_TEMPLATE = [
   '    "start": "node dist/src/index.js"',
   "  },",
   '  "dependencies": {',
-  '    "@type-x/runtime": "latest"',
+  '    "@type-x/runtime": "{{TYPEX_VERSION}}"',
   "  },",
   '  "devDependencies": {',
   '    "@types/node": "^25.6.0",',

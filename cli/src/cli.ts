@@ -4,11 +4,13 @@ import { createRequest } from "@type-x/runtime";
 import { internalCommands } from "./internal/index.js";
 import { executeCommand } from "./runtime/execute-command.js";
 import { executeResolvedCommand } from "./runtime/execute-resolved-command.js";
+import { readCliPackageVersion } from "./runtime/cli-package.js";
 import { readRegistry } from "./runtime/registry.js";
 import { INTERNAL_COMMAND_NAMES } from "./runtime/internal-command-names.js";
 import { resolveCommand } from "./runtime/resolve-command.js";
 
 const main = async (argv: string[]): Promise<void> => {
+  const cliPackageVersion = await readCliPackageVersion();
   const command = argv[0] ?? INTERNAL_COMMAND_NAMES.HELP;
   const internalCommand = internalCommands[command];
 
@@ -21,7 +23,7 @@ const main = async (argv: string[]): Promise<void> => {
       command: {
         name: command,
         packageName: "@type-x/cli",
-        version: "0.0.0",
+        version: cliPackageVersion,
       },
       handler: internalCommand,
       request,
@@ -60,7 +62,7 @@ const main = async (argv: string[]): Promise<void> => {
       command: {
         name: INTERNAL_COMMAND_NAMES.RUN_ALIAS,
         packageName: "@type-x/cli",
-        version: "0.0.0",
+        version: cliPackageVersion,
       },
       handler: aliasCommand,
       request: aliasRequest,

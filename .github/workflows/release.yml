@@ -1,0 +1,80 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: Select the semantic version bump to publish
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Bump package versions
+        run: node scripts/release.mjs ${{ inputs.release_type }}
+
+      - name: Read release version
+        run: echo "RELEASE_VERSION=$(node -e \"const fs=require('node:fs'); const pkg=JSON.parse(fs.readFileSync('cli/package.json','utf8')); process.stdout.write(pkg.version);\")" >> "$GITHUB_ENV"
+
+      - name: Run checks
+        run: |
+          pnpm build
+          pnpm test
+
+      - name: Publish @type-x/types
+        run: pnpm --filter @type-x/types publish --access public --no-git-checks --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish @type-x/runtime
+        run: pnpm --filter @type-x/runtime publish --access public --no-git-checks --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish @type-x/cli
+        run: pnpm --filter @type-x/cli publish --access public --no-git-checks --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Commit release changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "4226553+github-actions[bot]@users.noreply.github.com"
+          git add cli/package.json packages/runtime/package.json packages/types/package.json
+          git commit -m "release: v${RELEASE_VERSION}"
+
+      - name: Tag release
+        run: git tag "v${RELEASE_VERSION}"
+
+      - name: Push commit and tag
+        run: git push origin HEAD && git push origin "v${RELEASE_VERSION}"

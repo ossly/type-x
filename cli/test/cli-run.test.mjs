@@ -613,6 +613,9 @@ test("x --version prints the cli package version", async () => {
 });
 
 test("x init scaffolds a TypeScript x package", async () => {
+  const cliPackageJson = JSON.parse(
+    await readFile(resolve(process.cwd(), "package.json"), "utf8"),
+  );
   const projectDir = await mkdtemp(join(tmpdir(), "type-x-init-x-"));
   const targetDir = join(projectDir, "my-command");
 
@@ -652,7 +655,7 @@ test("x init scaffolds a TypeScript x package", async () => {
   assert.equal(packageJson.x.commands["hello-x"].entry, "./dist/src/index.js");
   assert.equal(packageJson.x.commands["hello-x"].description, "Say hello from hello-x");
   assert.equal(packageJson.devDependencies["@type-x/typescript-config"], undefined);
-  assert.equal(packageJson.devDependencies["@type-x/types"], "latest");
+  assert.equal(packageJson.devDependencies["@type-x/types"], cliPackageJson.version);
   assert.equal(tsconfig.extends, undefined);
   assert.deepEqual(tsconfig.compilerOptions.lib, ["es2022"]);
   assert.deepEqual(tsconfig.compilerOptions.types, ["node"]);
@@ -665,6 +668,9 @@ test("x init scaffolds a TypeScript x package", async () => {
 });
 
 test("x init --standalone scaffolds a standalone TypeScript CLI", async () => {
+  const cliPackageJson = JSON.parse(
+    await readFile(resolve(process.cwd(), "package.json"), "utf8"),
+  );
   const projectDir = await mkdtemp(join(tmpdir(), "type-x-init-standalone-"));
   const targetDir = join(projectDir, "my-standalone");
 
@@ -702,7 +708,7 @@ test("x init --standalone scaffolds a standalone TypeScript CLI", async () => {
 
   assert.equal(packageJson.name, "@acme/hello-standalone");
   assert.equal(packageJson.bin["hello-standalone"], "./dist/src/index.js");
-  assert.equal(packageJson.dependencies["@type-x/runtime"], "latest");
+  assert.equal(packageJson.dependencies["@type-x/runtime"], cliPackageJson.version);
   assert.equal(packageJson.x, undefined);
   assert.equal(tsconfig.extends, undefined);
   assert.deepEqual(tsconfig.compilerOptions.types, ["node"]);
