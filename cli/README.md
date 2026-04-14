@@ -2,6 +2,14 @@
 
 `@type-x/cli` is the package behind the `x` binary.
 
+## Install
+
+Install the `x` CLI globally:
+
+```sh
+npm install -g @type-x/cli@latest
+```
+
 ## What It Does
 
 - installs command packages with `x add`
