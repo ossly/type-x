@@ -11,3 +11,7 @@ This package is intentionally small. It contains the public runtime contract:
 - related `ui`, `exec`, `git`, `io`, and `env` types
 
 Use it when you only want types. If you are already depending on `@type-x/runtime`, you can import the same public types from there as well.
+
+## Author
+
+[Iñigo Taibo](https://github.com/itaibo)

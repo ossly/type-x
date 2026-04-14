@@ -53,3 +53,7 @@ initCli(main, {
   }
 });
 ```
+
+## Author
+
+[Iñigo Taibo](https://github.com/itaibo)

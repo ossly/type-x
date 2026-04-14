@@ -31,11 +31,13 @@ export const mergeInstallSource = ({
   explicitOptions: InstallSourceOptions;
   storedSource?: RegistryPackageSource;
 }): RegistryPackageSource => {
+  const inferredScope = inferScopeFromSpecifier(specifier);
+
   return {
     kind,
     specifier,
     registryUrl: explicitOptions.registryUrl ?? storedSource?.registryUrl,
-    scope: explicitOptions.scope ?? storedSource?.scope,
+    scope: explicitOptions.scope ?? storedSource?.scope ?? inferredScope,
     tokenEnvName: explicitOptions.tokenEnvName ?? storedSource?.tokenEnvName,
   };
 };
@@ -46,4 +48,18 @@ const readStringFlag = (
   return typeof value === "string" && value.trim().length > 0
     ? value.trim()
     : undefined;
+};
+
+const inferScopeFromSpecifier = (specifier: string): string | undefined => {
+  if (!specifier.startsWith("@")) {
+    return undefined;
+  }
+
+  const slashIndex = specifier.indexOf("/");
+
+  if (slashIndex <= 1) {
+    return undefined;
+  }
+
+  return specifier.slice(0, slashIndex);
 };

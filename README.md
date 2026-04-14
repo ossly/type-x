@@ -61,9 +61,19 @@ The `x` CLI supports npm-style package sources, including custom registries and
 private packages. Example:
 
 ```sh
-x add @acme/private-tool --registry https://npm.pkg.github.com --scope @acme --token-env GITHUB_TOKEN
+x add @acme/private-tool --registry https://npm.pkg.github.com --token-env GITHUB_TOKEN
 x upgrade @acme/private-tool
 ```
 
-`x` stores registry/source metadata locally so later upgrades can reuse it
-without re-passing the registry URL. Token values are never stored.
+`x upgrade` reuses the package source settings from the original install, so you
+do not need to pass the registry again. Token values are never stored.
+
+You can also pass a token directly for a one-shot install or upgrade:
+
+```sh
+x add @acme/private-tool --registry https://npm.pkg.github.com --token "$GITHUB_TOKEN"
+```
+
+## Author
+
+[Iñigo Taibo](https://github.com/itaibo)
