@@ -7,6 +7,15 @@ export interface RegistryPackage {
   version: string;
   path: string;
   commands: string[];
+  source?: RegistryPackageSource;
+}
+
+export interface RegistryPackageSource {
+  kind: "npm" | "local";
+  specifier: string;
+  registryUrl?: string;
+  scope?: string;
+  tokenEnvName?: string;
 }
 
 export interface RegistryCommand {
@@ -41,9 +50,16 @@ export const readRegistry = async (): Promise<Registry> => {
     const content = await readFile(registryFile, "utf8");
     const parsed = JSON.parse(content) as Partial<Registry>;
 
+    const packages = Object.fromEntries(
+      Object.entries(parsed.packages ?? {}).map(([packageName, pkg]) => [
+        packageName,
+        normalizeRegistryPackage(pkg),
+      ]),
+    );
+
     return {
       version: 1,
-      packages: parsed.packages ?? {},
+      packages,
       commands: parsed.commands ?? {},
       aliases: parsed.aliases ?? {},
     };
@@ -65,4 +81,48 @@ export const writeRegistry = async (registry: Registry): Promise<void> => {
 
 const isMissingFileError = (error: unknown): error is NodeJS.ErrnoException => {
   return error instanceof Error && "code" in error && error.code === "ENOENT";
+};
+
+const normalizeRegistryPackage = (value: unknown): RegistryPackage => {
+  const pkg = isRecord(value) ? value : {};
+
+  return {
+    name: typeof pkg.name === "string" ? pkg.name : "",
+    version: typeof pkg.version === "string" ? pkg.version : "",
+    path: typeof pkg.path === "string" ? pkg.path : "",
+    commands: Array.isArray(pkg.commands)
+      ? pkg.commands.filter((command): command is string => typeof command === "string")
+      : [],
+    source: normalizeRegistryPackageSource(pkg.source),
+  };
+};
+
+const normalizeRegistryPackageSource = (
+  value: unknown,
+): RegistryPackageSource | undefined => {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  if (value.kind !== "npm" && value.kind !== "local") {
+    return undefined;
+  }
+
+  if (typeof value.specifier !== "string" || value.specifier.length === 0) {
+    return undefined;
+  }
+
+  return {
+    kind: value.kind,
+    specifier: value.specifier,
+    registryUrl:
+      typeof value.registryUrl === "string" ? value.registryUrl : undefined,
+    scope: typeof value.scope === "string" ? value.scope : undefined,
+    tokenEnvName:
+      typeof value.tokenEnvName === "string" ? value.tokenEnvName : undefined,
+  };
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === "object" && value !== null;
 };

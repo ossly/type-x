@@ -10,6 +10,34 @@
 - manages aliases with `x alias`, `x aliases`, and `x unalias`
 - scaffolds new packages with `x init`
 
+## Private Packages And Custom Registries
+
+`x add` and `x upgrade` can pass npm-style registry/auth options through to the
+underlying `npm pack` call:
+
+```sh
+x add @acme/private-tool --registry https://npm.pkg.github.com --scope @acme --token-env GITHUB_TOKEN
+x upgrade @acme/private-tool
+```
+
+- `--registry <url>`
+  Uses a specific npm registry for the package fetch.
+- `--scope <scope>`
+  Writes scope-specific registry config like `@acme:registry=...` for the pack.
+- `--token-env <ENV_NAME>`
+  Reads the auth token from an environment variable.
+- `--token <value>`
+  Passes a one-shot token for the current install or upgrade only.
+
+The local `x` registry stores the package source metadata needed for later
+`x upgrade` runs, including the package specifier, registry URL, scope, and
+optional token env var name. Token values are never stored.
+
+Precedence is:
+
+1. current command flags
+2. stored package source metadata
+
 ## Init
 
 The scaffold is TypeScript-only.

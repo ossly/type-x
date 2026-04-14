@@ -6,6 +6,12 @@ export const help: CommandHandler = async () => {
   console.log("Usage");
   console.log("  x <command> [...args]");
   console.log("  x run <package-path> <command-name> [...args]");
+  console.log(
+    "  x add <package-name-or-path> [--registry <url>] [--scope <scope>] [--token-env <name>] [--token <value>]",
+  );
+  console.log(
+    "  x upgrade <package-name-or-path> [--registry <url>] [--scope <scope>] [--token-env <name>] [--token <value>]",
+  );
   console.log("");
   console.log("Internal commands");
   console.log(

@@ -4,6 +4,7 @@ import { join } from "node:path";
 import type { PackageManifest } from "../runtime/manifest.js";
 import { INTERNAL_COMMAND_NAME_SET } from "../runtime/internal-command-names.js";
 import {
+  type RegistryPackageSource,
   readRegistry,
   writeRegistry,
   type Registry,
@@ -14,6 +15,7 @@ import { ensureRuntimeDirs } from "../runtime/paths.js";
 
 export const registerPackageInstall = async (
   manifest: PackageManifest,
+  source?: RegistryPackageSource,
 ): Promise<void> => {
   const paths = await ensureRuntimeDirs();
   const registry = await readRegistry();
@@ -36,6 +38,7 @@ export const registerPackageInstall = async (
     version: manifest.packageVersion,
     path: packageDir,
     commands: Object.keys(manifest.commands),
+    source,
   };
 
   const nextRegistry: Registry = {
@@ -73,6 +76,7 @@ export const registerPackageInstall = async (
 
 export const replacePackageInstall = async (
   manifest: PackageManifest,
+  source?: RegistryPackageSource,
 ): Promise<void> => {
   const paths = await ensureRuntimeDirs();
   const registry = await readRegistry();
@@ -119,6 +123,7 @@ export const replacePackageInstall = async (
     version: manifest.packageVersion,
     path: packageDir,
     commands: Object.keys(manifest.commands),
+    source,
   };
 
   for (const [commandName, command] of Object.entries(manifest.commands)) {

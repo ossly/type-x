@@ -38,6 +38,13 @@ test("writeRegistry persists registry data", async () => {
       version: "1.0.0",
       path: "/tmp/hello-tools",
       commands: ["hello-dev"],
+      source: {
+        kind: "npm",
+        specifier: "@examples/hello-tools",
+        registryUrl: "https://npm.pkg.github.com/",
+        scope: "@examples",
+        tokenEnvName: "GITHUB_TOKEN",
+      },
     };
     registry.commands["hello-dev"] = {
       packageName: "@examples/hello-tools",

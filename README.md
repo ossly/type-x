@@ -55,3 +55,15 @@ pnpm --filter @type-x/runtime lint
 - `@type-x/runtime` is for normal npm CLIs that want the same injected context without requiring global `x`
 - `@type-x/types` keeps the runtime contract small and shareable
 
+## Private Registries
+
+The `x` CLI supports npm-style package sources, including custom registries and
+private packages. Example:
+
+```sh
+x add @acme/private-tool --registry https://npm.pkg.github.com --scope @acme --token-env GITHUB_TOKEN
+x upgrade @acme/private-tool
+```
+
+`x` stores registry/source metadata locally so later upgrades can reuse it
+without re-passing the registry URL. Token values are never stored.

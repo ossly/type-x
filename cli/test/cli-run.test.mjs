@@ -273,6 +273,101 @@ test("x upgrade replaces an installed package version", async () => {
   assert.match(runResult.stdout, /runs: 2/);
 });
 
+test("x add persists source metadata for later upgrades", async () => {
+  const xHome = await mkdtemp(join(tmpdir(), "type-x-cli-source-metadata-"));
+  const { packagePath, packageName } = await createJavaScriptFixturePackage();
+
+  await execFileAsync(
+    "node",
+    [
+      cliEntrypoint,
+      "add",
+      packagePath,
+      "--registry",
+      "https://npm.pkg.github.com",
+      "--scope",
+      "@acme",
+      "--token-env",
+      "GITHUB_TOKEN",
+    ],
+    {
+      cwd: process.cwd(),
+      env: {
+        ...process.env,
+        X_HOME: xHome,
+      },
+    },
+  );
+
+  const registry = JSON.parse(await readFile(join(xHome, "registry.json"), "utf8"));
+
+  assert.deepEqual(registry.packages[packageName].source, {
+    kind: "local",
+    specifier: packagePath,
+    registryUrl: "https://npm.pkg.github.com",
+    scope: "@acme",
+    tokenEnvName: "GITHUB_TOKEN",
+  });
+});
+
+test("x upgrade can reuse stored package source metadata", async () => {
+  const xHome = await mkdtemp(join(tmpdir(), "type-x-cli-upgrade-stored-source-"));
+  const originalPackage = await createJavaScriptFixturePackage();
+  const upgradedPackage = await createJavaScriptFixturePackage({
+    packageName: originalPackage.packageName,
+    version: "0.0.1",
+    greeting: "hello from stored-source upgrade",
+  });
+
+  await execFileAsync("node", [cliEntrypoint, "add", originalPackage.packagePath], {
+    cwd: process.cwd(),
+    env: {
+      ...process.env,
+      X_HOME: xHome,
+    },
+  });
+
+  const registryPath = join(xHome, "registry.json");
+  const registry = JSON.parse(await readFile(registryPath, "utf8"));
+  registry.packages[originalPackage.packageName].source = {
+    kind: "local",
+    specifier: upgradedPackage.packagePath,
+  };
+  await writeFile(registryPath, JSON.stringify(registry, null, 2) + "\n", "utf8");
+
+  const upgradeResult = await execFileAsync(
+    "node",
+    [cliEntrypoint, "upgrade", originalPackage.packageName],
+    {
+      cwd: process.cwd(),
+      env: {
+        ...process.env,
+        X_HOME: xHome,
+      },
+    },
+  );
+
+  assert.match(
+    upgradeResult.stdout,
+    new RegExp(`Upgraded ${escapeRegExp(originalPackage.packageName)} to 0\\.0\\.1`),
+  );
+
+  const runResult = await execFileAsync(
+    "node",
+    [cliEntrypoint, "hello-dev"],
+    {
+      cwd: process.cwd(),
+      env: {
+        ...process.env,
+        X_HOME: xHome,
+      },
+    },
+  );
+
+  assert.match(runResult.stdout, /hello from stored-source upgrade/);
+  assert.match(runResult.stdout, /@test\/hello-tools@0\.0\.1/);
+});
+
 test("x alias creates an alias that executes the target command and x unalias removes it", async () => {
   const xHome = await mkdtemp(join(tmpdir(), "type-x-cli-alias-"));
   const {
