@@ -54,10 +54,40 @@ The injected context exposes:
 
 Options include:
 
+- `mode`
+  `"capture"` is the default and buffers stdout/stderr while optionally streaming them.
+  `"inherit"` attaches the child process directly to the current terminal so interactive commands like `sudo`, editors, or prompts behave normally. In this mode, `stdout` and `stderr` are returned as empty strings.
 - `silent`
   When `false`, stream command output to the current process stdout/stderr. This is the default.
 - `throwOnError`
-  When `false`, return non-zero exit codes instead of throwing.
+  When `false`, return non-zero exit codes instead of throwing. By default it is true.
+
+When `throwOnError` is left on and the command exits non-zero, `exec()` throws a `CommandExecError` from `@type-x/runtime`. The error message is a stable summary, and the raw process output is available on the error instance through `stdout`, `stderr`, `exitCode`, `command`, `cwd`, and `mode`.
+
+Example for an interactive command:
+
+```ts
+await context.exec("sudo npm install -g some-tool", {
+  mode: "inherit",
+});
+```
+
+Example for handling command failures:
+
+```ts
+import { CommandExecError, initCli } from "@type-x/runtime";
+
+try {
+  await context.exec("git push");
+} catch (error) {
+  if (error instanceof CommandExecError) {
+    console.error(error.exitCode);
+    console.error(error.stderr);
+  }
+
+  throw error;
+}
+```
 
 ## Default Store Location
 
@@ -70,8 +100,8 @@ You can override that explicitly:
 ```ts
 initCli(main, {
   runtime: {
-    homeDir: "/some/custom/path"
-  }
+    homeDir: "/some/custom/path",
+  },
 });
 ```
 

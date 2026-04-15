@@ -53,6 +53,7 @@ export interface CommandExecOptions {
   cwd?: string;
   env?: Record<string, string | undefined>;
   input?: string;
+  mode?: "capture" | "inherit";
   silent?: boolean;
   throwOnError?: boolean;
 }
@@ -61,6 +62,15 @@ export interface CommandExecResult {
   exitCode: number;
   stdout: string;
   stderr: string;
+}
+
+export interface CommandExecErrorDetails {
+  command: string;
+  exitCode: number;
+  stdout: string;
+  stderr: string;
+  cwd: string;
+  mode: "capture" | "inherit";
 }
 
 export interface CommandExec {

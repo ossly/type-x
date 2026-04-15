@@ -2,6 +2,7 @@ export type {
   CommandContext,
   CommandEnv,
   CommandExec,
+  CommandExecErrorDetails,
   CommandExecOptions,
   CommandExecResult,
   CommandGit,
@@ -18,6 +19,7 @@ export type {
   CommandTask,
   CommandUi,
 } from "@type-x/types";
+export { CommandExecError } from "./errors.js";
 
 export { createCommandContext } from "./context.js";
 export { createCommandEnv } from "./env.js";

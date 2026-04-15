@@ -5,6 +5,7 @@ import type {
 } from "@type-x/types";
 import { spawn } from "node:child_process";
 import process from "node:process";
+import { CommandExecError } from "./errors.js";
 
 export const createCommandExec = ({
   cwd,
@@ -22,36 +23,62 @@ export const createCommandExec = ({
       ...env,
       ...options.env,
     };
+    const mode = options.mode ?? "capture";
     const silent = options.silent ?? false;
+
+    if (mode === "inherit") {
+      if (options.input !== undefined) {
+        throw new Error('`exec` cannot use `input` when `mode` is "inherit".');
+      }
+
+      if (silent) {
+        throw new Error(
+          '`exec` cannot use `silent: true` when `mode` is "inherit".',
+        );
+      }
+    }
 
     return new Promise<CommandExecResult>((resolve, reject) => {
       const child = spawn(command, {
         cwd: finalCwd,
         env: finalEnv,
         shell: true,
-        stdio: "pipe",
+        stdio: mode === "inherit" ? "inherit" : "pipe",
       });
 
       let stdout = "";
       let stderr = "";
 
-      child.stdout.on("data", (chunk: Buffer | string) => {
-        const text = chunk.toString();
-        stdout += text;
+      if (mode === "capture") {
+        const childStdout = child.stdout;
+        const childStderr = child.stderr;
+        const childStdin = child.stdin;
 
-        if (!silent) {
-          process.stdout.write(text);
+        if (!childStdout || !childStderr || !childStdin) {
+          reject(
+            new Error('`exec` could not create piped stdio in "capture" mode.'),
+          );
+          return;
         }
-      });
 
-      child.stderr.on("data", (chunk: Buffer | string) => {
-        const text = chunk.toString();
-        stderr += text;
+        childStdout.on("data", (chunk: Buffer | string) => {
+          const text = chunk.toString();
+          stdout += text;
 
-        if (!silent) {
-          process.stderr.write(text);
-        }
-      });
+          if (!silent) {
+            process.stdout.write(text);
+          }
+        });
+
+        childStderr.on("data", (chunk: Buffer | string) => {
+          const text = chunk.toString();
+          stderr += text;
+
+          if (!silent) {
+            process.stderr.write(text);
+          }
+        });
+      }
 
       child.on("error", (error) => {
         reject(error);
@@ -66,9 +93,14 @@ export const createCommandExec = ({
 
         if ((options.throwOnError ?? true) && result.exitCode !== 0) {
           reject(
-            new Error(
-              `Command "${command}" exited with code ${result.exitCode}: ${stderr || stdout}`.trim(),
-            ),
+            new CommandExecError({
+              command,
+              exitCode: result.exitCode,
+              stdout,
+              stderr,
+              cwd: finalCwd,
+              mode,
+            }),
           );
           return;
         }
@@ -76,11 +108,22 @@ export const createCommandExec = ({
         resolve(result);
       });
 
-      if (options.input !== undefined) {
-        child.stdin.write(options.input);
-      }
+      if (mode === "capture") {
+        const childStdin = child.stdin;
 
-      child.stdin.end();
+        if (!childStdin) {
+          reject(
+            new Error('`exec` could not create piped stdin in "capture" mode.'),
+          );
+          return;
+        }
+
+        if (options.input !== undefined) {
+          childStdin.write(options.input);
+        }
+
+        childStdin.end();
+      }
     });
   };
 };
