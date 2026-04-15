@@ -19,7 +19,7 @@ export type {
   CommandTask,
   CommandUi,
 } from "@type-x/types";
-export { CommandExecError } from "./errors.js";
+export { CommandExecError, isCommandExecError } from "./errors.js";
 
 export { createCommandContext } from "./context.js";
 export { createCommandEnv } from "./env.js";

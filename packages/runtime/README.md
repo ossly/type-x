@@ -62,7 +62,7 @@ Options include:
 - `throwOnError`
   When `false`, return non-zero exit codes instead of throwing. By default it is true.
 
-When `throwOnError` is left on and the command exits non-zero, `exec()` throws a `CommandExecError` from `@type-x/runtime`. The error message is a stable summary, and the raw process output is available on the error instance through `stdout`, `stderr`, `exitCode`, `command`, `cwd`, and `mode`.
+When `throwOnError` is left on and the command exits non-zero, `exec()` throws a `CommandExecError` from `@type-x/runtime`. The error message is a stable summary, and the raw process output is available on the error instance through `stdout`, `stderr`, `exitCode`, `command`, `cwd`, and `mode`. `@type-x/runtime` also exports `isCommandExecError(error)` for structural narrowing when you do not want to rely on `instanceof`.
 
 Example for an interactive command:
 
@@ -75,13 +75,22 @@ await context.exec("sudo npm install -g some-tool", {
 Example for handling command failures:
 
 ```ts
-import { CommandExecError, initCli } from "@type-x/runtime";
+import {
+  CommandExecError,
+  initCli,
+  isCommandExecError,
+} from "@type-x/runtime";
 
 try {
   await context.exec("git push");
 } catch (error) {
   if (error instanceof CommandExecError) {
     console.error(error.exitCode);
+    console.error(error.stderr);
+  }
+
+  if (isCommandExecError(error)) {
+    console.error(error.command);
     console.error(error.stderr);
   }
 

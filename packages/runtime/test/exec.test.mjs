@@ -2,7 +2,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import process from "node:process";
 
-import { CommandExecError, createCommandExec } from "../dist/src/index.js";
+import {
+  CommandExecError,
+  createCommandExec,
+  isCommandExecError,
+} from "../dist/src/index.js";
 
 test("createCommandExec runs a command and captures stdout", async () => {
   const exec = createCommandExec({
@@ -58,6 +62,35 @@ test("createCommandExec throws a structured error by default", async () => {
       return true;
     },
   );
+});
+
+test("isCommandExecError narrows structured exec errors", async () => {
+  const exec = createCommandExec({
+    cwd: process.cwd(),
+    env: process.env,
+  });
+
+  try {
+    await exec('node -e \'process.stderr.write("bad"); process.exit(3)\'', {
+      silent: true,
+    });
+    assert.fail("Expected exec to throw");
+  } catch (error) {
+    assert.equal(isCommandExecError(error), true);
+
+    if (!isCommandExecError(error)) {
+      assert.fail("Expected error to narrow as a command exec error");
+    }
+
+    assert.equal(error.exitCode, 3);
+    assert.equal(error.stderr, "bad");
+    assert.equal(error.command, 'node -e \'process.stderr.write("bad"); process.exit(3)\'');
+  }
+});
+
+test("isCommandExecError rejects non-exec errors", () => {
+  assert.equal(isCommandExecError(new Error("plain")), false);
+  assert.equal(isCommandExecError({ code: "COMMAND_EXEC_ERROR" }), false);
 });
 
 test("createCommandExec writes through to stdio when silent is false", async () => {
