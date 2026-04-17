@@ -31,16 +31,15 @@ export const createInitTemplate = ({
       label: "standalone TypeScript CLI",
       files: [
         ["README.md", renderTemplate(STANDALONE_README_TEMPLATE, values)],
-        ["package.json", renderTemplate(STANDALONE_PACKAGE_JSON_TEMPLATE, values)],
+        [
+          "package.json",
+          renderTemplate(STANDALONE_PACKAGE_JSON_TEMPLATE, values),
+        ],
         ["tsconfig.json", TYPESCRIPT_CONFIG_TEMPLATE],
         [".gitignore", GITIGNORE_TEMPLATE],
         ["src/index.ts", renderTemplate(STANDALONE_ENTRY_TEMPLATE, values)],
       ],
-      nextSteps: [
-        "pnpm install",
-        "pnpm build",
-        "node dist/src/index.js",
-      ],
+      nextSteps: ["pnpm install", "pnpm build", "node dist/src/index.js"],
     };
   }
 
@@ -53,11 +52,7 @@ export const createInitTemplate = ({
       [".gitignore", GITIGNORE_TEMPLATE],
       ["src/index.ts", renderTemplate(X_PACKAGE_ENTRY_TEMPLATE, values)],
     ],
-    nextSteps: [
-      "pnpm install",
-      "pnpm build",
-      `x run . ${commandName}`,
-    ],
+    nextSteps: ["pnpm install", "pnpm build", `x run . ${commandName}`],
   };
 };
 
@@ -96,9 +91,11 @@ const X_PACKAGE_JSON_TEMPLATE = [
   '  "name": "{{PACKAGE_NAME}}",',
   '  "version": "0.0.0",',
   '  "type": "module",',
+  '  "files": ["dist"],',
   '  "scripts": {',
   '    "build": "tsc -p tsconfig.json",',
   '    "check-types": "tsc -p tsconfig.json --noEmit"',
+  '    "prepack": "npm run build"',
   "  },",
   '  "devDependencies": {',
   '    "@type-x/types": "{{TYPEX_VERSION}}",',
@@ -123,6 +120,7 @@ const STANDALONE_PACKAGE_JSON_TEMPLATE = [
   '  "name": "{{PACKAGE_NAME}}",',
   '  "version": "0.0.0",',
   '  "type": "module",',
+  '  "files": ["dist"],',
   '  "bin": {',
   '    "{{COMMAND_NAME}}": "./dist/src/index.js"',
   "  },",
@@ -130,6 +128,7 @@ const STANDALONE_PACKAGE_JSON_TEMPLATE = [
   '    "build": "tsc -p tsconfig.json",',
   '    "check-types": "tsc -p tsconfig.json --noEmit",',
   '    "start": "node dist/src/index.js"',
+  '    "prepack": "npm run build"',
   "  },",
   '  "dependencies": {',
   '    "@type-x/runtime": "{{TYPEX_VERSION}}"',
