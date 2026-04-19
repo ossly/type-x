@@ -24,9 +24,7 @@ export const upgrade: CommandHandler = async ({ request, ui }) => {
       },
     });
 
-    task.done(`Upgraded ${manifest.packageName} to ${manifest.packageVersion}`);
-
-    console.log(
+    task.done(
       `Upgraded ${manifest.packageName} to ${manifest.packageVersion} with ${Object.keys(manifest.commands).length} command(s).`,
     );
   } catch (error: unknown) {
