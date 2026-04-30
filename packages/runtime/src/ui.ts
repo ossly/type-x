@@ -13,12 +13,15 @@ export const createCommandUi = ({
     confirm: async (message: string): Promise<boolean> => {
       assertInteractive(input, output);
 
-      return confirm({
-        message,
-      }, {
-        input,
-        output,
-      });
+      return confirm(
+        {
+          message,
+        },
+        {
+          input,
+          output,
+        },
+      );
     },
     input: async (message: string): Promise<string> => {
       assertInteractive(input, output);
@@ -57,11 +60,11 @@ const isInteractive = (
 ): boolean => {
   return Boolean(
     "isTTY" in input &&
-      "isTTY" in output &&
-      typeof input.isTTY === "boolean" &&
-      typeof output.isTTY === "boolean" &&
-      input.isTTY &&
-      output.isTTY,
+    "isTTY" in output &&
+    typeof input.isTTY === "boolean" &&
+    typeof output.isTTY === "boolean" &&
+    input.isTTY &&
+    output.isTTY,
   );
 };
 
@@ -80,10 +83,10 @@ const isSpinnerCapable = (
 ): boolean => {
   return Boolean(
     isInteractive(input, output) &&
-      "cursorTo" in output &&
-      typeof output.cursorTo === "function" &&
-      "clearLine" in output &&
-      typeof output.clearLine === "function",
+    "cursorTo" in output &&
+    typeof output.cursorTo === "function" &&
+    "clearLine" in output &&
+    typeof output.clearLine === "function",
   );
 };
 
@@ -122,9 +125,6 @@ const inputPrompt = (
   );
 };
 
-const writeLine = (
-  output: NodeJS.WritableStream,
-  message: string,
-): void => {
+const writeLine = (output: NodeJS.WritableStream, message: string): void => {
   output.write(`${message}\n`);
 };

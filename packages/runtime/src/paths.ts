@@ -15,7 +15,9 @@ export const getRuntimePaths = (homeDir: string): RuntimePaths => {
   };
 };
 
-export const ensureRuntimeDirs = async (homeDir: string): Promise<RuntimePaths> => {
+export const ensureRuntimeDirs = async (
+  homeDir: string,
+): Promise<RuntimePaths> => {
   const paths = getRuntimePaths(homeDir);
 
   await mkdir(paths.homeDir, { recursive: true });

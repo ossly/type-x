@@ -30,7 +30,9 @@ export const removePackage = async (packageName: string): Promise<void> => {
   }
 
   const aliasesToRemove = Object.entries(nextRegistry.aliases)
-    .filter(([, alias]) => installedPackage.commands.includes(alias.targetCommand))
+    .filter(([, alias]) =>
+      installedPackage.commands.includes(alias.targetCommand),
+    )
     .map(([aliasName]) => aliasName);
 
   for (const aliasName of aliasesToRemove) {

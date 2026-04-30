@@ -3,7 +3,10 @@ import { rm } from "node:fs/promises";
 import { extractPackage } from "./extract-package.js";
 import { packPackage } from "./pack-package.js";
 import { parsePackageSpec } from "./package-spec.js";
-import { mergeInstallSource, type InstallSourceOptions } from "./source-options.js";
+import {
+  mergeInstallSource,
+  type InstallSourceOptions,
+} from "./source-options.js";
 import {
   registerPackageInstall,
   replacePackageInstall,

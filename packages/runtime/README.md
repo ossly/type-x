@@ -75,11 +75,7 @@ await context.exec("sudo npm install -g some-tool", {
 Example for handling command failures:
 
 ```ts
-import {
-  CommandExecError,
-  initCli,
-  isCommandExecError,
-} from "@type-x/runtime";
+import { CommandExecError, initCli, isCommandExecError } from "@type-x/runtime";
 
 try {
   await context.exec("git push");

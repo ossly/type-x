@@ -1,5 +1,9 @@
 import { createCommandContext as createBaseCommandContext } from "@type-x/runtime";
-import type { CommandContext, CommandMetadata, CommandRequest } from "@type-x/types";
+import type {
+  CommandContext,
+  CommandMetadata,
+  CommandRequest,
+} from "@type-x/types";
 import { getRuntimePaths } from "./paths.js";
 
 export const createCommandContext = (

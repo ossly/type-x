@@ -13,7 +13,10 @@ export const createCommandGit = (exec: CommandExec): CommandGit => {
 };
 
 const readGitInfo = async (exec: CommandExec): Promise<CommandGitInfo> => {
-  const insideWorkTree = await runGit(exec, "git rev-parse --is-inside-work-tree");
+  const insideWorkTree = await runGit(
+    exec,
+    "git rev-parse --is-inside-work-tree",
+  );
 
   if (!insideWorkTree.ok || insideWorkTree.stdout.trim() !== "true") {
     return {
@@ -102,7 +105,9 @@ const getRepoName = (
   originUrl: string | undefined,
   rootDir: string | undefined,
 ): string | undefined => {
-  const originRepoName = originUrl ? parseRepoNameFromOrigin(originUrl) : undefined;
+  const originRepoName = originUrl
+    ? parseRepoNameFromOrigin(originUrl)
+    : undefined;
 
   if (originRepoName) {
     return originRepoName;

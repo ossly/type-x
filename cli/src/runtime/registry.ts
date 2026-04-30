@@ -91,7 +91,9 @@ const normalizeRegistryPackage = (value: unknown): RegistryPackage => {
     version: typeof pkg.version === "string" ? pkg.version : "",
     path: typeof pkg.path === "string" ? pkg.path : "",
     commands: Array.isArray(pkg.commands)
-      ? pkg.commands.filter((command): command is string => typeof command === "string")
+      ? pkg.commands.filter(
+          (command): command is string => typeof command === "string",
+        )
       : [],
     source: normalizeRegistryPackageSource(pkg.source),
   };

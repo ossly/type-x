@@ -74,10 +74,7 @@ export interface CommandExecErrorDetails {
 }
 
 export interface CommandExec {
-  (
-    command: string,
-    options?: CommandExecOptions,
-  ): Promise<CommandExecResult>;
+  (command: string, options?: CommandExecOptions): Promise<CommandExecResult>;
 }
 
 export interface CommandGitInfo {

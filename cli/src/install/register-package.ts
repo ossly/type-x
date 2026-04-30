@@ -69,7 +69,9 @@ export const registerPackageInstall = async (
   try {
     await writeRegistry(nextRegistry);
   } catch (error: unknown) {
-    await rm(packageDir, { recursive: true, force: true }).catch(() => undefined);
+    await rm(packageDir, { recursive: true, force: true }).catch(
+      () => undefined,
+    );
     throw error;
   }
 };
@@ -138,7 +140,9 @@ export const replacePackageInstall = async (
   try {
     await writeRegistry(nextRegistry);
   } catch (error: unknown) {
-    await rm(packageDir, { recursive: true, force: true }).catch(() => undefined);
+    await rm(packageDir, { recursive: true, force: true }).catch(
+      () => undefined,
+    );
     throw error;
   }
 

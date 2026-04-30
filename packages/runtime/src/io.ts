@@ -7,11 +7,7 @@ import { mkdir, stat, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { basename, dirname, join, resolve, sep } from "node:path";
 
-export const createCommandIo = ({
-  cwd,
-}: {
-  cwd: string;
-}): CommandIo => {
+export const createCommandIo = ({ cwd }: { cwd: string }): CommandIo => {
   return {
     expandPath: (path: string): string => {
       return expandPath(path, cwd);

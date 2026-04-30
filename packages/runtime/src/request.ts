@@ -85,7 +85,9 @@ const inferOptions = (
       const short = shortFlags;
 
       options[short] = {
-        type: shouldTreatNextValueAsString(argv[index + 1]) ? "string" : "boolean",
+        type: shouldTreatNextValueAsString(argv[index + 1])
+          ? "string"
+          : "boolean",
         short,
       };
       continue;

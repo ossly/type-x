@@ -108,7 +108,9 @@ const resolveToken = (options: InstallSourceOptions): string | undefined => {
   return undefined;
 };
 
-const normalizeRegistryUrl = (value: string | undefined): string | undefined => {
+const normalizeRegistryUrl = (
+  value: string | undefined,
+): string | undefined => {
   if (!value) {
     return undefined;
   }

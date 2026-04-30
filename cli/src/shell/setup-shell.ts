@@ -2,10 +2,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { delimiter, join } from "node:path";
 import { homedir } from "node:os";
 
-import {
-  getDefaultRuntimeHomeDir,
-  getRuntimePaths,
-} from "../runtime/paths.js";
+import { getDefaultRuntimeHomeDir, getRuntimePaths } from "../runtime/paths.js";
 
 export interface ShellSetupSuggestion {
   shellName: string;

@@ -51,19 +51,28 @@ const runCommand = async <
   const cwd = options.cwd ?? process.cwd();
   const env = options.env ?? process.env;
   const argv = options.argv ?? process.argv.slice(2);
-  const entryFilePath = resolve(options.entryFilePath ?? process.argv[1] ?? cwd);
+  const entryFilePath = resolve(
+    options.entryFilePath ?? process.argv[1] ?? cwd,
+  );
   const packageMetadata = await readPackageMetadata(entryFilePath, cwd);
-  const command = resolveCommandMetadata(options, packageMetadata, entryFilePath);
-  const runtimeHomeDir =
-    options.runtime?.homeDir
-      ? expandPath(options.runtime.homeDir, cwd)
-      : getDefaultRuntimeHomeDir(command.packageName);
+  const command = resolveCommandMetadata(
+    options,
+    packageMetadata,
+    entryFilePath,
+  );
+  const runtimeHomeDir = options.runtime?.homeDir
+    ? expandPath(options.runtime.homeDir, cwd)
+    : getDefaultRuntimeHomeDir(command.packageName);
   const request = createRequest(argv, {
     invocationArgv: [command.name, ...argv],
     cwd,
     env,
   });
-  const context = createCommandContext<TStore>(command, request, runtimeHomeDir);
+  const context = createCommandContext<TStore>(
+    command,
+    request,
+    runtimeHomeDir,
+  );
 
   await invokeCommand(handler, context);
 };
@@ -113,7 +122,8 @@ const resolveCommandMetadata = (
   packageMetadata: PackageMetadata,
   entryFilePath: string,
 ): CommandMetadata => {
-  const packageName = options.packageName ?? packageMetadata.packageName ?? "unknown-package";
+  const packageName =
+    options.packageName ?? packageMetadata.packageName ?? "unknown-package";
   const version = options.version ?? packageMetadata.version ?? "0.0.0";
   const name =
     options.name ??
@@ -158,9 +168,7 @@ const stripPackageScope = (name: string): string => {
   return slashIndex >= 0 ? name.slice(slashIndex + 1) : name;
 };
 
-const getDefaultRuntimeHomeDir = (
-  packageName: string,
-): string => {
+const getDefaultRuntimeHomeDir = (packageName: string): string => {
   const packageKey = sanitizePackageName(packageName);
 
   return join(homedir(), ".type-x", packageKey);
@@ -170,7 +178,9 @@ const sanitizePackageName = (packageName: string): string => {
   return packageName.replace(/^@/, "").replaceAll("/", "__");
 };
 
-const findPackageRoot = async (startDir: string): Promise<string | undefined> => {
+const findPackageRoot = async (
+  startDir: string,
+): Promise<string | undefined> => {
   let currentDir = resolve(startDir);
 
   while (true) {

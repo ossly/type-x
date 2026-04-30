@@ -38,19 +38,19 @@ export const isCommandExecError = (
 ): error is Error & CommandExecErrorDetails => {
   return Boolean(
     error instanceof Error &&
-      "code" in error &&
-      error.code === "COMMAND_EXEC_ERROR" &&
-      "command" in error &&
-      typeof error.command === "string" &&
-      "exitCode" in error &&
-      typeof error.exitCode === "number" &&
-      "stdout" in error &&
-      typeof error.stdout === "string" &&
-      "stderr" in error &&
-      typeof error.stderr === "string" &&
-      "cwd" in error &&
-      typeof error.cwd === "string" &&
-      "mode" in error &&
-      (error.mode === "capture" || error.mode === "inherit"),
+    "code" in error &&
+    error.code === "COMMAND_EXEC_ERROR" &&
+    "command" in error &&
+    typeof error.command === "string" &&
+    "exitCode" in error &&
+    typeof error.exitCode === "number" &&
+    "stdout" in error &&
+    typeof error.stdout === "string" &&
+    "stderr" in error &&
+    typeof error.stderr === "string" &&
+    "cwd" in error &&
+    typeof error.cwd === "string" &&
+    "mode" in error &&
+    (error.mode === "capture" || error.mode === "inherit"),
   );
 };

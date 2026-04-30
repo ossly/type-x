@@ -2,10 +2,7 @@ import { access, mkdir, writeFile } from "node:fs/promises";
 import { basename, dirname, join, resolve } from "node:path";
 
 import type { CommandHandler } from "@type-x/types";
-import {
-  createInitTemplate,
-  type InitTemplateKind,
-} from "./templates.js";
+import { createInitTemplate, type InitTemplateKind } from "./templates.js";
 import { readCliPackageVersion } from "../../runtime/cli-package.js";
 
 export const init: CommandHandler = async ({ request, ui, log }) => {
