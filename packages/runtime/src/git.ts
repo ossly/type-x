@@ -21,13 +21,17 @@ const readGitInfo = async (exec: CommandExec): Promise<CommandGitInfo> => {
   if (!insideWorkTree.ok) {
     // "not a git repository" is a normal non-repo situation; anything else
     // (e.g. "git: command not found") is a real failure worth surfacing.
-    const combined = (insideWorkTree.stderr + insideWorkTree.stdout).toLowerCase();
+    const combined = (
+      insideWorkTree.stderr + insideWorkTree.stdout
+    ).toLowerCase();
     if (
       !combined.includes("not a git repository") &&
       !combined.includes("not a work tree") &&
       combined.length > 0
     ) {
-      process.stderr.write(`Warning: git check failed: ${insideWorkTree.stderr.trim()}\n`);
+      process.stderr.write(
+        `Warning: git check failed: ${insideWorkTree.stderr.trim()}\n`,
+      );
     }
     return { isRepository: false };
   }

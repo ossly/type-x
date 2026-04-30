@@ -39,7 +39,8 @@ export const mergeInstallSource = ({
   const inferredScope = inferScopeFromSpecifier(specifier);
   const registryUrl = explicitOptions.registryUrl ?? storedSource?.registryUrl;
   const scope = explicitOptions.scope ?? storedSource?.scope ?? inferredScope;
-  const tokenEnvName = explicitOptions.tokenEnvName ?? storedSource?.tokenEnvName;
+  const tokenEnvName =
+    explicitOptions.tokenEnvName ?? storedSource?.tokenEnvName;
 
   return {
     kind,

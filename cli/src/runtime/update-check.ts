@@ -30,7 +30,9 @@ export const getUpdateNotice = async (
 
   if (!latestVersion) return undefined;
 
-  return isNewerVersion(latestVersion, currentVersion) ? latestVersion : undefined;
+  return isNewerVersion(latestVersion, currentVersion)
+    ? latestVersion
+    : undefined;
 };
 
 const readUpdateCache = async (): Promise<UpdateCache | undefined> => {

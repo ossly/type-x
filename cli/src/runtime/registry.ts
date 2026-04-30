@@ -136,9 +136,13 @@ const normalizeRegistryPackageSource = (
   return {
     kind: value.kind,
     specifier: value.specifier,
-    ...(typeof value.registryUrl === "string" ? { registryUrl: value.registryUrl } : {}),
+    ...(typeof value.registryUrl === "string"
+      ? { registryUrl: value.registryUrl }
+      : {}),
     ...(typeof value.scope === "string" ? { scope: value.scope } : {}),
-    ...(typeof value.tokenEnvName === "string" ? { tokenEnvName: value.tokenEnvName } : {}),
+    ...(typeof value.tokenEnvName === "string"
+      ? { tokenEnvName: value.tokenEnvName }
+      : {}),
   };
 };
 
