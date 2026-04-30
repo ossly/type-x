@@ -29,6 +29,9 @@ export class CommandExecError extends Error implements CommandExecErrorDetails {
   }
 
   get combinedOutput(): string {
+    if (this.stdout && this.stderr) {
+      return `${this.stdout}\n${this.stderr}`;
+    }
     return this.stderr || this.stdout;
   }
 }

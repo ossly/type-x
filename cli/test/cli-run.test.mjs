@@ -852,7 +852,7 @@ const createTypeScriptFixturePackage = async ({
         },
         devDependencies: {
           "@type-x/types": "latest",
-          "@types/node": "^25.6.0",
+          "@types/node": "^18.19.0",
           typescript: "^5.9.2",
         },
         x: {

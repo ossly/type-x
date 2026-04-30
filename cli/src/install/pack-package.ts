@@ -1,4 +1,4 @@
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, rm, unlink, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 
 import { execFile } from "node:child_process";
@@ -47,6 +47,9 @@ export const packPackage = async (
     );
 
     stdout = result.stdout;
+
+    // Delete credentials immediately after pack to minimise exposure window.
+    await unlink(npmUserConfigFile).catch(() => undefined);
   } catch (error: unknown) {
     await rm(tempDir, { recursive: true, force: true }).catch(() => undefined);
     throw new Error(

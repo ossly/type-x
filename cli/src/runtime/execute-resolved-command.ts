@@ -15,7 +15,7 @@ export const executeResolvedCommand = async (
       name: resolvedCommand.commandName,
       packageName: resolvedCommand.packageName,
       version: resolvedCommand.packageVersion,
-      aliasUsed,
+      ...(aliasUsed !== undefined ? { aliasUsed } : {}),
     },
     handler,
     request,

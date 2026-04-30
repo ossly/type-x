@@ -20,7 +20,8 @@
     "build": "pnpm --filter @type-x/types build && tsc -p tsconfig.json",
     "lint": "eslint . --max-warnings 0",
     "check-types": "pnpm --filter @type-x/types build && tsc --noEmit",
-    "test": "pnpm run build && node --test test/*.test.mjs"
+    "test": "pnpm run build && node --test test/*.test.mjs",
+    "coverage": "pnpm run build && node --experimental-test-coverage --test test/*.test.mjs"
   },
   "dependencies": {
     "@inquirer/prompts": "^8.4.1",
@@ -30,7 +31,7 @@
   "devDependencies": {
     "@type-x/eslint-config": "workspace:*",
     "@type-x/typescript-config": "workspace:*",
-    "@types/node": "^25.6.0",
+    "@types/node": "^18.19.0",
     "eslint": "^9.39.1",
     "typescript": "5.9.2"
   }

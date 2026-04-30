@@ -100,14 +100,12 @@ const readPackageMetadata = async (
 
     return {
       packageRoot,
-      packageName:
-        typeof parsed.name === "string" && parsed.name.length > 0
-          ? parsed.name
-          : undefined,
-      version:
-        typeof parsed.version === "string" && parsed.version.length > 0
-          ? parsed.version
-          : undefined,
+      ...(typeof parsed.name === "string" && parsed.name.length > 0
+        ? { packageName: parsed.name }
+        : {}),
+      ...(typeof parsed.version === "string" && parsed.version.length > 0
+        ? { version: parsed.version }
+        : {}),
       bin: parsed.bin,
     };
   }

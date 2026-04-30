@@ -11,6 +11,11 @@ on:
           - patch
           - minor
           - major
+      dry_run:
+        description: "Dry run: print what would be released without publishing"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -39,7 +44,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Bump package versions
-        run: node scripts/release.mjs ${{ inputs.release_type }}
+        run: node scripts/release.mjs ${{ inputs.release_type }} ${{ inputs.dry_run == 'true' && '--dry-run' || '' }}
 
       - name: Read release version
         run: |
@@ -52,29 +57,35 @@ jobs:
           pnpm test
 
       - name: Publish @type-x/types
+        if: ${{ inputs.dry_run != true }}
         run: pnpm --filter @type-x/types publish --access public --no-git-checks --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @type-x/runtime
+        if: ${{ inputs.dry_run != true }}
         run: pnpm --filter @type-x/runtime publish --access public --no-git-checks --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @type-x/cli
+        if: ${{ inputs.dry_run != true }}
         run: pnpm --filter @type-x/cli publish --access public --no-git-checks --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Commit release changes
+        if: ${{ inputs.dry_run != true }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "4226553+github-actions[bot]@users.noreply.github.com"
-          git add cli/package.json packages/runtime/package.json packages/types/package.json
+          git add cli/package.json packages/runtime/package.json packages/types/package.json CHANGELOG.md
           git commit -m "release: v${RELEASE_VERSION}"
 
       - name: Tag release
+        if: ${{ inputs.dry_run != true }}
         run: git tag "v${RELEASE_VERSION}"
 
       - name: Push commit and tag
+        if: ${{ inputs.dry_run != true }}
         run: git push origin HEAD && git push origin "v${RELEASE_VERSION}"

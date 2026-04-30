@@ -1,14 +1,25 @@
+import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 import type { CommandHandler } from "@type-x/types";
+import { getRuntimePaths } from "./paths.js";
 
 export const loadCommand = async (
   entryFile: string,
 ): Promise<CommandHandler> => {
+  const { packagesDir } = getRuntimePaths();
+  const resolvedEntry = resolve(entryFile);
+
+  if (!resolvedEntry.startsWith(packagesDir + "/")) {
+    throw new Error(
+      `Refusing to load command module outside of packages directory: "${entryFile}"`,
+    );
+  }
+
   let commandModule: unknown;
 
   try {
-    commandModule = await import(pathToFileURL(entryFile).href);
+    commandModule = await import(pathToFileURL(resolvedEntry).href);
   } catch (error: unknown) {
     throw new Error(
       `Failed to load command module "${entryFile}": ${getErrorMessage(error)}`,

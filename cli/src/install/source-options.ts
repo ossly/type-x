@@ -12,11 +12,16 @@ export interface InstallSourceOptions {
 export const readInstallSourceOptions = (
   request: CommandRequest,
 ): InstallSourceOptions => {
+  const registryUrl = readStringFlag(request.flags.registry);
+  const scope = readStringFlag(request.flags.scope);
+  const token = readStringFlag(request.flags.token);
+  const tokenEnvName = readStringFlag(request.flags["token-env"]);
+
   return {
-    registryUrl: readStringFlag(request.flags.registry),
-    scope: readStringFlag(request.flags.scope),
-    token: readStringFlag(request.flags.token),
-    tokenEnvName: readStringFlag(request.flags["token-env"]),
+    ...(registryUrl !== undefined ? { registryUrl } : {}),
+    ...(scope !== undefined ? { scope } : {}),
+    ...(token !== undefined ? { token } : {}),
+    ...(tokenEnvName !== undefined ? { tokenEnvName } : {}),
   };
 };
 
@@ -32,13 +37,16 @@ export const mergeInstallSource = ({
   storedSource?: RegistryPackageSource;
 }): RegistryPackageSource => {
   const inferredScope = inferScopeFromSpecifier(specifier);
+  const registryUrl = explicitOptions.registryUrl ?? storedSource?.registryUrl;
+  const scope = explicitOptions.scope ?? storedSource?.scope ?? inferredScope;
+  const tokenEnvName = explicitOptions.tokenEnvName ?? storedSource?.tokenEnvName;
 
   return {
     kind,
     specifier,
-    registryUrl: explicitOptions.registryUrl ?? storedSource?.registryUrl,
-    scope: explicitOptions.scope ?? storedSource?.scope ?? inferredScope,
-    tokenEnvName: explicitOptions.tokenEnvName ?? storedSource?.tokenEnvName,
+    ...(registryUrl !== undefined ? { registryUrl } : {}),
+    ...(scope !== undefined ? { scope } : {}),
+    ...(tokenEnvName !== undefined ? { tokenEnvName } : {}),
   };
 };
 

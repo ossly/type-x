@@ -1,4 +1,5 @@
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile, rename, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 
 import { ensureRuntimeDirs, getRuntimePaths } from "./paths.js";
 
@@ -46,37 +47,55 @@ export const createEmptyRegistry = (): Registry => ({
 export const readRegistry = async (): Promise<Registry> => {
   const { registryFile } = getRuntimePaths();
 
+  let content: string;
   try {
-    const content = await readFile(registryFile, "utf8");
-    const parsed = JSON.parse(content) as Partial<Registry>;
-
-    const packages = Object.fromEntries(
-      Object.entries(parsed.packages ?? {}).map(([packageName, pkg]) => [
-        packageName,
-        normalizeRegistryPackage(pkg),
-      ]),
-    );
-
-    return {
-      version: 1,
-      packages,
-      commands: parsed.commands ?? {},
-      aliases: parsed.aliases ?? {},
-    };
+    content = await readFile(registryFile, "utf8");
   } catch (error: unknown) {
     if (isMissingFileError(error)) {
       return createEmptyRegistry();
     }
-
     throw error;
   }
+
+  let parsed: Partial<Registry>;
+  try {
+    parsed = JSON.parse(content) as Partial<Registry>;
+  } catch {
+    throw new Error(
+      `Registry file is corrupted and cannot be parsed: ${registryFile}\n` +
+        `You can reset it by deleting the file and running "x add" again.`,
+    );
+  }
+
+  if (parsed.version !== 1) {
+    process.stderr.write(
+      `Warning: registry version ${String(parsed.version)} is not supported (expected 1). Some data may be ignored.\n`,
+    );
+  }
+
+  const packages = Object.fromEntries(
+    Object.entries(parsed.packages ?? {}).map(([packageName, pkg]) => [
+      packageName,
+      normalizeRegistryPackage(pkg),
+    ]),
+  );
+
+  return {
+    version: 1,
+    packages,
+    commands: parsed.commands ?? {},
+    aliases: parsed.aliases ?? {},
+  };
 };
 
 export const writeRegistry = async (registry: Registry): Promise<void> => {
-  const { registryFile } = await ensureRuntimeDirs();
-  const content = JSON.stringify(registry, null, 2);
+  const paths = await ensureRuntimeDirs();
+  const content = `${JSON.stringify(registry, null, 2)}\n`;
+  // Write to a temp file then rename so concurrent readers never see a partial write.
+  const tmpFile = join(paths.homeDir, `.registry.${process.pid}.tmp`);
 
-  await writeFile(registryFile, `${content}\n`, "utf8");
+  await writeFile(tmpFile, content, "utf8");
+  await rename(tmpFile, paths.registryFile);
 };
 
 const isMissingFileError = (error: unknown): error is NodeJS.ErrnoException => {
@@ -117,11 +136,9 @@ const normalizeRegistryPackageSource = (
   return {
     kind: value.kind,
     specifier: value.specifier,
-    registryUrl:
-      typeof value.registryUrl === "string" ? value.registryUrl : undefined,
-    scope: typeof value.scope === "string" ? value.scope : undefined,
-    tokenEnvName:
-      typeof value.tokenEnvName === "string" ? value.tokenEnvName : undefined,
+    ...(typeof value.registryUrl === "string" ? { registryUrl: value.registryUrl } : {}),
+    ...(typeof value.scope === "string" ? { scope: value.scope } : {}),
+    ...(typeof value.tokenEnvName === "string" ? { tokenEnvName: value.tokenEnvName } : {}),
   };
 };
 

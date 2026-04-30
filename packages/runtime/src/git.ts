@@ -18,10 +18,22 @@ const readGitInfo = async (exec: CommandExec): Promise<CommandGitInfo> => {
     "git rev-parse --is-inside-work-tree",
   );
 
-  if (!insideWorkTree.ok || insideWorkTree.stdout.trim() !== "true") {
-    return {
-      isRepository: false,
-    };
+  if (!insideWorkTree.ok) {
+    // "not a git repository" is a normal non-repo situation; anything else
+    // (e.g. "git: command not found") is a real failure worth surfacing.
+    const combined = (insideWorkTree.stderr + insideWorkTree.stdout).toLowerCase();
+    if (
+      !combined.includes("not a git repository") &&
+      !combined.includes("not a work tree") &&
+      combined.length > 0
+    ) {
+      process.stderr.write(`Warning: git check failed: ${insideWorkTree.stderr.trim()}\n`);
+    }
+    return { isRepository: false };
+  }
+
+  if (insideWorkTree.stdout.trim() !== "true") {
+    return { isRepository: false };
   }
 
   const rootDirResult = await runGit(exec, "git rev-parse --show-toplevel");
