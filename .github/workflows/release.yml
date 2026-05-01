@@ -79,7 +79,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "4226553+github-actions[bot]@users.noreply.github.com"
-          git add cli/package.json packages/runtime/package.json packages/types/package.json CHANGELOG.md
+          git add cli/package.json packages/runtime/package.json packages/types/package.json
           git commit -m "release: v${RELEASE_VERSION}"
 
       - name: Tag release

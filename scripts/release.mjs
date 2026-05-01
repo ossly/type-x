@@ -1,9 +1,5 @@
 import { readFile, writeFile } from "node:fs/promises";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
 import { resolve } from "node:path";
-
-const execFileAsync = promisify(execFile);
 
 const RELEASE_PACKAGE_PATHS = [
   "cli/package.json",
@@ -54,15 +50,8 @@ if (versions.size !== 1) {
 const currentVersion = packageEntries[0].packageJson.version;
 const nextVersion = bumpVersion(currentVersion, bumpType);
 
-console.log(`Bumping from ${currentVersion} to ${nextVersion}${dryRun ? " (dry run)" : ""}`);
-
-// Generate changelog entry from git log since the last tag.
-const changelog = await buildChangelogEntry(nextVersion, currentVersion);
-
 if (dryRun) {
-  console.log("\n--- Changelog entry ---");
-  console.log(changelog);
-  console.log("--- End changelog ---");
+  console.log(`Would bump from ${currentVersion} to ${nextVersion}`);
   console.log("\nDry run complete. No files were modified.");
   process.exit(0);
 }
@@ -76,12 +65,7 @@ for (const entry of packageEntries) {
   );
 }
 
-await prependChangelog(changelog);
-
 console.log(`Bumped published packages from ${currentVersion} to ${nextVersion}`);
-console.log("Updated CHANGELOG.md");
-
-// --- helpers ---
 
 function bumpVersion(version, type) {
   const match = /^(\d+)\.(\d+)\.(\d+)$/.exec(version);
@@ -103,62 +87,4 @@ function bumpVersion(version, type) {
   }
 
   return `${major}.${minor}.${patch + 1}`;
-}
-
-async function buildChangelogEntry(nextVersion, currentVersion) {
-  const date = new Date().toISOString().slice(0, 10);
-
-  let commits = "";
-  try {
-    // Get all commits since the last tag (or all commits if no tag exists).
-    const lastTag = await getLastTag(currentVersion);
-    const range = lastTag ? `${lastTag}..HEAD` : "HEAD";
-    const { stdout } = await execFileAsync("git", [
-      "log",
-      range,
-      "--pretty=format:- %s",
-      "--no-merges",
-    ]);
-    commits = stdout.trim();
-  } catch {
-    commits = "- (could not read git log)";
-  }
-
-  return [
-    `## [${nextVersion}] - ${date}`,
-    "",
-    commits || "- (no commits since last release)",
-    "",
-  ].join("\n");
-}
-
-async function getLastTag(currentVersion) {
-  try {
-    const { stdout } = await execFileAsync("git", [
-      "tag",
-      "--list",
-      `v${currentVersion}`,
-    ]);
-    return stdout.trim() || null;
-  } catch {
-    return null;
-  }
-}
-
-async function prependChangelog(entry) {
-  const changelogPath = resolve(workspaceRoot, "CHANGELOG.md");
-  let existing = "";
-
-  try {
-    existing = await readFile(changelogPath, "utf8");
-  } catch {
-    existing = "# Changelog\n\n";
-  }
-
-  // Insert after the first heading line (# Changelog\n\n).
-  const insertAt = existing.indexOf("\n\n") + 2;
-  const updated =
-    existing.slice(0, insertAt) + entry + "\n" + existing.slice(insertAt);
-
-  await writeFile(changelogPath, updated, "utf8");
 }
