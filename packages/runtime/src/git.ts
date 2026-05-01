@@ -49,14 +49,28 @@ const readGitInfo = async (exec: CommandExec): Promise<CommandGitInfo> => {
   const originUrl = getTrimmedOutput(originUrlResult);
   const repoName = getRepoName(originUrl, rootDir);
 
-  return {
+  const gitInfo: CommandGitInfo = {
     isRepository: true,
-    rootDir,
-    branch,
-    originUrl,
-    repoName,
     isDetachedHead: branch === undefined,
   };
+
+  if (rootDir !== undefined) {
+    gitInfo.rootDir = rootDir;
+  }
+
+  if (branch !== undefined) {
+    gitInfo.branch = branch;
+  }
+
+  if (originUrl !== undefined) {
+    gitInfo.originUrl = originUrl;
+  }
+
+  if (repoName !== undefined) {
+    gitInfo.repoName = repoName;
+  }
+
+  return gitInfo;
 };
 
 const runGit = async (

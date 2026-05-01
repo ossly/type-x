@@ -104,6 +104,7 @@ const isMissingFileError = (error: unknown): error is NodeJS.ErrnoException => {
 
 const normalizeRegistryPackage = (value: unknown): RegistryPackage => {
   const pkg = isRecord(value) ? value : {};
+  const source = normalizeRegistryPackageSource(pkg.source);
 
   return {
     name: typeof pkg.name === "string" ? pkg.name : "",
@@ -114,7 +115,7 @@ const normalizeRegistryPackage = (value: unknown): RegistryPackage => {
           (command): command is string => typeof command === "string",
         )
       : [],
-    source: normalizeRegistryPackageSource(pkg.source),
+    ...(source !== undefined ? { source } : {}),
   };
 };
 

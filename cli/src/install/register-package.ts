@@ -38,7 +38,7 @@ export const registerPackageInstall = async (
     version: manifest.packageVersion,
     path: packageDir,
     commands: Object.keys(manifest.commands),
-    source,
+    ...(source !== undefined ? { source } : {}),
   };
 
   const nextRegistry: Registry = {
@@ -125,7 +125,7 @@ export const replacePackageInstall = async (
     version: manifest.packageVersion,
     path: packageDir,
     commands: Object.keys(manifest.commands),
-    source,
+    ...(source !== undefined ? { source } : {}),
   };
 
   for (const [commandName, command] of Object.entries(manifest.commands)) {

@@ -39,16 +39,23 @@ export const installPackage = async ({
     specifier: spec.source,
     kind: spec.kind,
     explicitOptions: options ?? {},
-    storedSource: existingPackage?.source,
+    ...(existingPackage?.source !== undefined
+      ? { storedSource: existingPackage.source }
+      : {}),
   });
 
   onStatus?.("Packing package");
-  const packedPackage = await packPackage(spec, {
-    registryUrl: source.registryUrl,
-    scope: source.scope,
-    token: options?.token,
-    tokenEnvName: source.tokenEnvName,
-  });
+  const packOptions: InstallSourceOptions = {
+    ...(source.registryUrl !== undefined
+      ? { registryUrl: source.registryUrl }
+      : {}),
+    ...(source.scope !== undefined ? { scope: source.scope } : {}),
+    ...(options?.token !== undefined ? { token: options.token } : {}),
+    ...(source.tokenEnvName !== undefined
+      ? { tokenEnvName: source.tokenEnvName }
+      : {}),
+  };
+  const packedPackage = await packPackage(spec, packOptions);
   try {
     onStatus?.("Extracting package");
     const extractedPackage = await extractPackage(
