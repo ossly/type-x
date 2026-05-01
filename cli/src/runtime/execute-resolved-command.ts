@@ -8,7 +8,9 @@ export const executeResolvedCommand = async (
   request: CommandRequest,
   aliasUsed?: string,
 ): Promise<void> => {
-  const handler = await loadCommand(resolvedCommand.entryFile);
+  const handler = await loadCommand(resolvedCommand.entryFile, {
+    rootDir: resolvedCommand.packagePath,
+  });
 
   await executeCommand({
     command: {

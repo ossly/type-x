@@ -1,18 +1,24 @@
-import { resolve } from "node:path";
+import { relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 import type { CommandHandler } from "@type-x/types";
-import { getRuntimePaths } from "./paths.js";
+
+export interface LoadCommandOptions {
+  rootDir?: string;
+}
 
 export const loadCommand = async (
   entryFile: string,
+  options: LoadCommandOptions = {},
 ): Promise<CommandHandler> => {
-  const { packagesDir } = getRuntimePaths();
   const resolvedEntry = resolve(entryFile);
 
-  if (!resolvedEntry.startsWith(packagesDir + "/")) {
+  if (
+    options.rootDir !== undefined &&
+    !isPathInsideDirectory(resolvedEntry, options.rootDir)
+  ) {
     throw new Error(
-      `Refusing to load command module outside of packages directory: "${entryFile}"`,
+      `Refusing to load command module outside of package directory: "${entryFile}"`,
     );
   }
 
@@ -40,6 +46,15 @@ export const loadCommand = async (
   }
 
   return defaultExport as CommandHandler;
+};
+
+const isPathInsideDirectory = (filePath: string, directory: string): boolean => {
+  const relativePath = relative(resolve(directory), filePath);
+  return (
+    relativePath.length > 0 &&
+    !relativePath.startsWith("..") &&
+    !relativePath.includes(":")
+  );
 };
 
 const getErrorMessage = (error: unknown): string => {
