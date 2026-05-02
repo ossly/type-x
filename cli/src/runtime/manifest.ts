@@ -1,9 +1,15 @@
+import type { RepeatedFlagsMode } from "@type-x/runtime";
 import { readFile, stat } from "node:fs/promises";
 import { resolve } from "node:path";
+
+export interface PackageCommandRuntimeOptions {
+  repeatedFlags?: RepeatedFlagsMode;
+}
 
 export interface PackageCommandManifest {
   entry: string;
   description: string;
+  runtime?: PackageCommandRuntimeOptions;
 }
 
 export interface PackageManifest {
@@ -24,6 +30,7 @@ interface RawPackageManifest {
       {
         entry?: unknown;
         description?: unknown;
+        runtime?: unknown;
       }
     >;
   };
@@ -32,6 +39,7 @@ interface RawPackageManifest {
 interface RawPackageCommandManifest {
   entry?: unknown;
   description?: unknown;
+  runtime?: unknown;
 }
 
 export const readPackageManifest = async (
@@ -196,7 +204,46 @@ const validateCommandManifest = async (
   return {
     entry: command.entry,
     description: command.description,
+    ...("runtime" in command
+      ? {
+          runtime: validateCommandRuntimeOptions(
+            packageJsonPath,
+            commandName,
+            command.runtime,
+          ),
+        }
+      : {}),
   };
+};
+
+const validateCommandRuntimeOptions = (
+  packageJsonPath: string,
+  commandName: string,
+  value: unknown,
+): PackageCommandRuntimeOptions => {
+  if (value === undefined) {
+    return {};
+  }
+
+  if (!isRecord(value)) {
+    throw new Error(
+      `Invalid package manifest "${packageJsonPath}": expected "x.commands.${commandName}.runtime" to be an object when provided.`,
+    );
+  }
+
+  const runtime: PackageCommandRuntimeOptions = {};
+
+  if ("repeatedFlags" in value) {
+    if (value.repeatedFlags !== "array" && value.repeatedFlags !== "last") {
+      throw new Error(
+        `Invalid package manifest "${packageJsonPath}": expected "x.commands.${commandName}.runtime.repeatedFlags" to be "array" or "last", received ${describeValue(value.repeatedFlags)}.`,
+      );
+    }
+
+    runtime.repeatedFlags = value.repeatedFlags;
+  }
+
+  return runtime;
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> => {

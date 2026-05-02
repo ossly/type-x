@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { createRequest } from "@type-x/runtime";
+import type { RepeatedFlagsMode } from "@type-x/runtime";
 import { internalCommands } from "./internal/index.js";
 import { executeCommand } from "./runtime/execute-command.js";
 import { executeResolvedCommand } from "./runtime/execute-resolved-command.js";
@@ -22,6 +23,7 @@ const main = async (argv: string[]): Promise<void> => {
   if (internalCommand) {
     const request = createRequest(command === argv[0] ? argv.slice(1) : [], {
       invocationArgv: argv,
+      repeatedFlags: "last",
     });
 
     await executeCommand({
@@ -39,6 +41,7 @@ const main = async (argv: string[]): Promise<void> => {
     if (resolvedCommand) {
       const request = createRequest(argv.slice(1), {
         invocationArgv: argv,
+        ...requestRepeatedFlagsOption(resolvedCommand.runtime?.repeatedFlags),
       });
 
       await executeResolvedCommand(resolvedCommand, request);
@@ -59,6 +62,7 @@ const main = async (argv: string[]): Promise<void> => {
             command,
             ...argv.slice(1),
           ],
+          repeatedFlags: "last",
         });
 
         await executeCommand({
@@ -85,6 +89,12 @@ const main = async (argv: string[]): Promise<void> => {
       );
     }
   }
+};
+
+const requestRepeatedFlagsOption = (
+  repeatedFlags: RepeatedFlagsMode | undefined,
+): { repeatedFlags?: RepeatedFlagsMode } => {
+  return repeatedFlags !== undefined ? { repeatedFlags } : {};
 };
 
 main(process.argv.slice(2)).catch((error: unknown) => {

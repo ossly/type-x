@@ -27,6 +27,9 @@ test("readPackageManifest returns validated package metadata", async () => {
             hello: {
               entry: "./dist/hello.js",
               description: "Say hello",
+              runtime: {
+                repeatedFlags: "last",
+              },
             },
           },
         },
@@ -38,7 +41,7 @@ test("readPackageManifest returns validated package metadata", async () => {
   await mkdir(join(packageDir, "dist"), { recursive: true });
   await writeFile(
     join(packageDir, "dist/hello.js"),
-    'export default async function main() {}\n',
+    "export default async function main() {}\n",
   );
 
   const manifest = await readPackageManifest(packageDir);
@@ -48,6 +51,45 @@ test("readPackageManifest returns validated package metadata", async () => {
   assert.equal(manifest.packageVersion, "1.2.3");
   assert.equal(command.entry, "./dist/hello.js");
   assert.equal(command.description, "Say hello");
+  assert.deepEqual(command.runtime, {
+    repeatedFlags: "last",
+  });
+});
+
+test("readPackageManifest allows omitted command runtime options", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "type-x-manifest-no-runtime-"));
+  const packageDir = join(dir, "hello-tools");
+
+  await mkdir(join(packageDir, "dist"), { recursive: true });
+  await writeFile(
+    join(packageDir, "dist/hello.js"),
+    "export default async function main() {}\n",
+  );
+  await writeFile(
+    join(packageDir, "package.json"),
+    JSON.stringify(
+      {
+        name: "@examples/hello-tools",
+        version: "1.2.3",
+        x: {
+          runtime: "1",
+          commands: {
+            hello: {
+              entry: "./dist/hello.js",
+              description: "Say hello",
+            },
+          },
+        },
+      },
+      null,
+      2,
+    ),
+  );
+
+  const manifest = await readPackageManifest(packageDir);
+  const command = getManifestCommand(manifest, "hello");
+
+  assert.equal(command.runtime, undefined);
 });
 
 test("readPackageManifest rejects missing x manifest object", async () => {
@@ -106,7 +148,9 @@ test("readPackageManifest rejects invalid runtime", async () => {
 });
 
 test("readPackageManifest rejects missing commands object", async () => {
-  const dir = await mkdtemp(join(tmpdir(), "type-x-manifest-missing-commands-"));
+  const dir = await mkdtemp(
+    join(tmpdir(), "type-x-manifest-missing-commands-"),
+  );
   const packageDir = join(dir, "bad-tools");
 
   await mkdir(packageDir, { recursive: true });
@@ -138,7 +182,7 @@ test("readPackageManifest rejects empty command description", async () => {
   await mkdir(join(packageDir, "dist"), { recursive: true });
   await writeFile(
     join(packageDir, "dist/hello.js"),
-    'export default async function main() {}\n',
+    "export default async function main() {}\n",
   );
   await writeFile(
     join(packageDir, "package.json"),
@@ -200,6 +244,47 @@ test("readPackageManifest rejects missing command entry file", async () => {
 
   await assert.rejects(
     () => readPackageManifest(packageDir),
-    new RegExp(`entry "\\./dist/hello\\.js" was not found at "${missingEntryPath}"`),
+    new RegExp(
+      `entry "\\./dist/hello\\.js" was not found at "${missingEntryPath}"`,
+    ),
+  );
+});
+
+test("readPackageManifest rejects invalid command runtime options", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "type-x-manifest-bad-runtime-"));
+  const packageDir = join(dir, "bad-tools");
+
+  await mkdir(join(packageDir, "dist"), { recursive: true });
+  await writeFile(
+    join(packageDir, "dist/hello.js"),
+    "export default async function main() {}\n",
+  );
+  await writeFile(
+    join(packageDir, "package.json"),
+    JSON.stringify(
+      {
+        name: "@examples/bad-tools",
+        version: "1.0.0",
+        x: {
+          runtime: "1",
+          commands: {
+            hello: {
+              entry: "./dist/hello.js",
+              description: "Say hello",
+              runtime: {
+                repeatedFlags: "count",
+              },
+            },
+          },
+        },
+      },
+      null,
+      2,
+    ),
+  );
+
+  await assert.rejects(
+    () => readPackageManifest(packageDir),
+    /expected "x\.commands\.hello\.runtime\.repeatedFlags" to be "array" or "last", received "count"/,
   );
 });

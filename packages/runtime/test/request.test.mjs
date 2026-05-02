@@ -99,3 +99,17 @@ test("createRequest parses repeated flags as arrays", () => {
     verbose: [true, true],
   });
 });
+
+test("createRequest can parse repeated flags with last value winning", () => {
+  const request = createRequest(
+    ["--param", "a", "--param", "b", "-n", "one", "-n", "two"],
+    {
+      repeatedFlags: "last",
+    },
+  );
+
+  assert.deepEqual(request.flags, {
+    param: "b",
+    n: "two",
+  });
+});

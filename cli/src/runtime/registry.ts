@@ -1,3 +1,4 @@
+import type { RepeatedFlagsMode } from "@type-x/runtime";
 import { readFile, rename, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
@@ -24,6 +25,11 @@ export interface RegistryCommand {
   packageVersion: string;
   entry: string;
   description: string;
+  runtime?: RegistryCommandRuntimeOptions;
+}
+
+export interface RegistryCommandRuntimeOptions {
+  repeatedFlags?: RepeatedFlagsMode;
 }
 
 export interface RegistryAlias {
@@ -83,7 +89,12 @@ export const readRegistry = async (): Promise<Registry> => {
   return {
     version: 1,
     packages,
-    commands: parsed.commands ?? {},
+    commands: Object.fromEntries(
+      Object.entries(parsed.commands ?? {}).map(([commandName, command]) => [
+        commandName,
+        normalizeRegistryCommand(command),
+      ]),
+    ),
     aliases: parsed.aliases ?? {},
   };
 };
@@ -143,6 +154,36 @@ const normalizeRegistryPackageSource = (
     ...(typeof value.scope === "string" ? { scope: value.scope } : {}),
     ...(typeof value.tokenEnvName === "string"
       ? { tokenEnvName: value.tokenEnvName }
+      : {}),
+  };
+};
+
+const normalizeRegistryCommand = (value: unknown): RegistryCommand => {
+  const command = isRecord(value) ? value : {};
+  const runtime = normalizeRegistryCommandRuntimeOptions(command.runtime);
+
+  return {
+    packageName:
+      typeof command.packageName === "string" ? command.packageName : "",
+    packageVersion:
+      typeof command.packageVersion === "string" ? command.packageVersion : "",
+    entry: typeof command.entry === "string" ? command.entry : "",
+    description:
+      typeof command.description === "string" ? command.description : "",
+    ...(runtime !== undefined ? { runtime } : {}),
+  };
+};
+
+const normalizeRegistryCommandRuntimeOptions = (
+  value: unknown,
+): RegistryCommandRuntimeOptions | undefined => {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  return {
+    ...(value.repeatedFlags === "array" || value.repeatedFlags === "last"
+      ? { repeatedFlags: value.repeatedFlags }
       : {}),
   };
 };

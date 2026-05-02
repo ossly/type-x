@@ -1,5 +1,6 @@
 import { resolve } from "node:path";
 
+import type { RegistryCommandRuntimeOptions } from "./registry.js";
 import { readRegistry } from "./registry.js";
 
 export interface ResolvedCommand {
@@ -10,6 +11,7 @@ export interface ResolvedCommand {
   entry: string;
   entryFile: string;
   description: string;
+  runtime?: RegistryCommandRuntimeOptions;
 }
 
 export const resolveCommand = async (
@@ -38,5 +40,6 @@ export const resolveCommand = async (
     entry: command.entry,
     entryFile: resolve(pkg.path, command.entry),
     description: command.description,
+    ...(command.runtime !== undefined ? { runtime: command.runtime } : {}),
   };
 };

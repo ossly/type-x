@@ -56,6 +56,17 @@ context.request.flags.param; // ["a", "b"]
 context.request.flags.verbose; // true
 ```
 
+This is the default `runtime.repeatedFlags: "array"` behavior. To keep only the
+last value for repeated flags, configure the runtime:
+
+```ts
+initCli(main, {
+  runtime: {
+    repeatedFlags: "last",
+  },
+});
+```
+
 ## Exec
 
 `context.exec()` runs a shell command string and returns:

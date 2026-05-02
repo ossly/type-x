@@ -61,6 +61,7 @@ export const registerPackageInstall = async (
       packageVersion: manifest.packageVersion,
       entry: command.entry,
       description: command.description,
+      ...(command.runtime !== undefined ? { runtime: command.runtime } : {}),
     };
 
     nextRegistry.commands[commandName] = registryCommand;
@@ -134,6 +135,7 @@ export const replacePackageInstall = async (
       packageVersion: manifest.packageVersion,
       entry: command.entry,
       description: command.description,
+      ...(command.runtime !== undefined ? { runtime: command.runtime } : {}),
     };
   }
 

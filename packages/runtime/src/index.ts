@@ -32,4 +32,5 @@ export { createCommandUi } from "./ui.js";
 export { getRuntimePaths, ensureRuntimeDirs } from "./paths.js";
 export { invokeCommand } from "./invoke-command.js";
 export { initCli } from "./run-command.js";
+export type { RepeatedFlagsMode } from "./request.js";
 export type { CommandRuntimeOptions, InitCliOptions } from "./run-command.js";

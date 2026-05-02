@@ -18,5 +18,6 @@ export const resolveLocalCommand = async (
     entry: command.entry,
     entryFile: resolve(manifest.packagePath, command.entry),
     description: command.description,
+    ...(command.runtime !== undefined ? { runtime: command.runtime } : {}),
   };
 };

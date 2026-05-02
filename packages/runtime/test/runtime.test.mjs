@@ -152,6 +152,47 @@ test("initCli expands ~ in runtime homeDir overrides", async () => {
   }
 });
 
+test("initCli supports repeated flag parsing options", async () => {
+  const previousArgv = process.argv;
+  const cwd = await mkdtemp(join(tmpdir(), "type-x-runtime-flags-"));
+  const entryFilePath = join(cwd, "dist/cli.js");
+  let resolveHandler;
+  const handlerFinished = new Promise((resolve) => {
+    resolveHandler = resolve;
+  });
+
+  process.argv = [
+    "node",
+    entryFilePath,
+    "--param",
+    "a",
+    "--param",
+    "b",
+  ];
+
+  try {
+    initCli(async (context) => {
+      assert.deepEqual(context.request.flags, {
+        param: "b",
+      });
+      resolveHandler();
+    }, {
+      cwd,
+      entryFilePath,
+      name: "runtime-cli",
+      packageName: "@examples/runtime-cli",
+      version: "1.2.3",
+      runtime: {
+        repeatedFlags: "last",
+      },
+    });
+
+    await handlerFinished;
+  } finally {
+    process.argv = previousArgv;
+  }
+});
+
 test("initCli sets process exit code on errors", async () => {
   const previousArgv = process.argv;
   const previousExitCode = process.exitCode;

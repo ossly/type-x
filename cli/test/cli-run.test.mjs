@@ -12,10 +12,7 @@ const cliEntrypoint = resolve(process.cwd(), "dist/src/cli.js");
 
 test("x run executes a local package command", async () => {
   const xHome = await mkdtemp(join(tmpdir(), "type-x-cli-run-"));
-  const {
-    packagePath,
-    packageName,
-  } = await createJavaScriptFixturePackage();
+  const { packagePath, packageName } = await createJavaScriptFixturePackage();
 
   const result = await execFileAsync(
     "node",
@@ -31,16 +28,16 @@ test("x run executes a local package command", async () => {
 
   assert.match(result.stdout, /hello from local package/);
   assert.match(result.stdout, /command: hello-dev/);
-  assert.match(result.stdout, new RegExp(`${escapeRegExp(packageName)}@0\\.0\\.0`));
+  assert.match(
+    result.stdout,
+    new RegExp(`${escapeRegExp(packageName)}@0\\.0\\.0`),
+  );
   assert.match(result.stdout, /runs: 1/);
 });
 
 test("x run executes a TypeScript package", async () => {
   const xHome = await mkdtemp(join(tmpdir(), "type-x-cli-run-ts-"));
-  const {
-    packagePath,
-    packageName,
-  } = await createTypeScriptFixturePackage();
+  const { packagePath, packageName } = await createTypeScriptFixturePackage();
 
   const result = await execFileAsync(
     "node",
@@ -56,18 +53,50 @@ test("x run executes a TypeScript package", async () => {
 
   assert.match(result.stdout, /hello from typed package/);
   assert.match(result.stdout, /command: hello-ts/);
-  assert.match(result.stdout, new RegExp(`${escapeRegExp(packageName)}@0\\.0\\.0`));
+  assert.match(
+    result.stdout,
+    new RegExp(`${escapeRegExp(packageName)}@0\\.0\\.0`),
+  );
   assert.match(result.stdout, /runs: 1/);
   assert.match(result.stdout, /name: itaibo/);
   assert.match(result.stdout, /storedName: itaibo/);
 });
 
+test("x run applies command runtime repeated flag options", async () => {
+  const xHome = await mkdtemp(join(tmpdir(), "type-x-cli-run-runtime-"));
+  const { packagePath } = await createJavaScriptFixturePackage({
+    runtime: {
+      repeatedFlags: "last",
+    },
+  });
+
+  const result = await execFileAsync(
+    "node",
+    [
+      cliEntrypoint,
+      "run",
+      packagePath,
+      "hello-dev",
+      "--name",
+      "first",
+      "--name",
+      "second",
+    ],
+    {
+      cwd: process.cwd(),
+      env: {
+        ...process.env,
+        X_HOME: xHome,
+      },
+    },
+  );
+
+  assert.match(result.stdout, /name: second/);
+});
+
 test("x add installs a package and x remove deletes it", async () => {
   const xHome = await mkdtemp(join(tmpdir(), "type-x-cli-add-remove-"));
-  const {
-    packagePath,
-    packageName,
-  } = await createJavaScriptFixturePackage();
+  const { packagePath, packageName } = await createJavaScriptFixturePackage();
 
   const addResult = await execFileAsync(
     "node",
@@ -109,17 +138,13 @@ test("x add installs a package and x remove deletes it", async () => {
 
   assert.match(lsAfterAdd.stdout, /hello-dev/);
 
-  await execFileAsync(
-    "node",
-    [cliEntrypoint, "alias", "hi=hello-dev"],
-    {
-      cwd: process.cwd(),
-      env: {
-        ...process.env,
-        X_HOME: xHome,
-      },
+  await execFileAsync("node", [cliEntrypoint, "alias", "hi=hello-dev"], {
+    cwd: process.cwd(),
+    env: {
+      ...process.env,
+      X_HOME: xHome,
     },
-  );
+  });
 
   await execFileAsync("node", [cliEntrypoint, "hello-dev"], {
     cwd: process.cwd(),
@@ -129,11 +154,7 @@ test("x add installs a package and x remove deletes it", async () => {
     },
   });
 
-  const storeFilePath = join(
-    xHome,
-    "stores",
-    getStoreFileName(packageName),
-  );
+  const storeFilePath = join(xHome, "stores", getStoreFileName(packageName));
   await access(storeFilePath);
 
   const removeResult = await execFileAsync(
@@ -208,13 +229,17 @@ test("x upgrade replaces an installed package version", async () => {
     greeting: "hello from upgraded package",
   });
 
-  await execFileAsync("node", [cliEntrypoint, "add", originalPackage.packagePath], {
-    cwd: process.cwd(),
-    env: {
-      ...process.env,
-      X_HOME: xHome,
+  await execFileAsync(
+    "node",
+    [cliEntrypoint, "add", originalPackage.packagePath],
+    {
+      cwd: process.cwd(),
+      env: {
+        ...process.env,
+        X_HOME: xHome,
+      },
     },
-  });
+  );
 
   const initialRunResult = await execFileAsync(
     "node",
@@ -244,26 +269,26 @@ test("x upgrade replaces an installed package version", async () => {
 
   assert.match(
     upgradeResult.stdout,
-    new RegExp(`Upgraded ${escapeRegExp(originalPackage.packageName)} to 0\\.0\\.1`),
+    new RegExp(
+      `Upgraded ${escapeRegExp(originalPackage.packageName)} to 0\\.0\\.1`,
+    ),
   );
   assert.match(upgradeResult.stdout, /\[ \] Upgrading/);
   assert.match(upgradeResult.stdout, /\[ \] Replacing installed package:/);
   assert.match(
     upgradeResult.stdout,
-    new RegExp(`\\[ok\\] Upgraded ${escapeRegExp(originalPackage.packageName)} to 0\\.0\\.1`),
+    new RegExp(
+      `\\[ok\\] Upgraded ${escapeRegExp(originalPackage.packageName)} to 0\\.0\\.1`,
+    ),
   );
 
-  const runResult = await execFileAsync(
-    "node",
-    [cliEntrypoint, "hello-dev"],
-    {
-      cwd: process.cwd(),
-      env: {
-        ...process.env,
-        X_HOME: xHome,
-      },
+  const runResult = await execFileAsync("node", [cliEntrypoint, "hello-dev"], {
+    cwd: process.cwd(),
+    env: {
+      ...process.env,
+      X_HOME: xHome,
     },
-  );
+  });
 
   assert.match(runResult.stdout, /hello from upgraded package/);
   assert.match(
@@ -299,7 +324,9 @@ test("x add persists source metadata for later upgrades", async () => {
     },
   );
 
-  const registry = JSON.parse(await readFile(join(xHome, "registry.json"), "utf8"));
+  const registry = JSON.parse(
+    await readFile(join(xHome, "registry.json"), "utf8"),
+  );
 
   assert.deepEqual(registry.packages[packageName].source, {
     kind: "local",
@@ -311,7 +338,9 @@ test("x add persists source metadata for later upgrades", async () => {
 });
 
 test("x upgrade can reuse stored package source metadata", async () => {
-  const xHome = await mkdtemp(join(tmpdir(), "type-x-cli-upgrade-stored-source-"));
+  const xHome = await mkdtemp(
+    join(tmpdir(), "type-x-cli-upgrade-stored-source-"),
+  );
   const originalPackage = await createJavaScriptFixturePackage();
   const upgradedPackage = await createJavaScriptFixturePackage({
     packageName: originalPackage.packageName,
@@ -319,13 +348,17 @@ test("x upgrade can reuse stored package source metadata", async () => {
     greeting: "hello from stored-source upgrade",
   });
 
-  await execFileAsync("node", [cliEntrypoint, "add", originalPackage.packagePath], {
-    cwd: process.cwd(),
-    env: {
-      ...process.env,
-      X_HOME: xHome,
+  await execFileAsync(
+    "node",
+    [cliEntrypoint, "add", originalPackage.packagePath],
+    {
+      cwd: process.cwd(),
+      env: {
+        ...process.env,
+        X_HOME: xHome,
+      },
     },
-  });
+  );
 
   const registryPath = join(xHome, "registry.json");
   const registry = JSON.parse(await readFile(registryPath, "utf8"));
@@ -333,7 +366,11 @@ test("x upgrade can reuse stored package source metadata", async () => {
     kind: "local",
     specifier: upgradedPackage.packagePath,
   };
-  await writeFile(registryPath, JSON.stringify(registry, null, 2) + "\n", "utf8");
+  await writeFile(
+    registryPath,
+    JSON.stringify(registry, null, 2) + "\n",
+    "utf8",
+  );
 
   const upgradeResult = await execFileAsync(
     "node",
@@ -349,20 +386,18 @@ test("x upgrade can reuse stored package source metadata", async () => {
 
   assert.match(
     upgradeResult.stdout,
-    new RegExp(`Upgraded ${escapeRegExp(originalPackage.packageName)} to 0\\.0\\.1`),
+    new RegExp(
+      `Upgraded ${escapeRegExp(originalPackage.packageName)} to 0\\.0\\.1`,
+    ),
   );
 
-  const runResult = await execFileAsync(
-    "node",
-    [cliEntrypoint, "hello-dev"],
-    {
-      cwd: process.cwd(),
-      env: {
-        ...process.env,
-        X_HOME: xHome,
-      },
+  const runResult = await execFileAsync("node", [cliEntrypoint, "hello-dev"], {
+    cwd: process.cwd(),
+    env: {
+      ...process.env,
+      X_HOME: xHome,
     },
-  );
+  });
 
   assert.match(runResult.stdout, /hello from stored-source upgrade/);
   assert.match(runResult.stdout, /@test\/hello-tools@0\.0\.1/);
@@ -370,9 +405,7 @@ test("x upgrade can reuse stored package source metadata", async () => {
 
 test("x alias creates an alias that executes the target command and x unalias removes it", async () => {
   const xHome = await mkdtemp(join(tmpdir(), "type-x-cli-alias-"));
-  const {
-    packagePath,
-  } = await createJavaScriptFixturePackage();
+  const { packagePath } = await createJavaScriptFixturePackage();
 
   await execFileAsync("node", [cliEntrypoint, "add", packagePath], {
     cwd: process.cwd(),
@@ -452,9 +485,7 @@ test("x alias creates an alias that executes the target command and x unalias re
 
 test("x alias allows exposing an installed command under the same global name", async () => {
   const xHome = await mkdtemp(join(tmpdir(), "type-x-cli-alias-same-name-"));
-  const {
-    packagePath,
-  } = await createJavaScriptFixturePackage();
+  const { packagePath } = await createJavaScriptFixturePackage();
 
   await execFileAsync("node", [cliEntrypoint, "add", packagePath], {
     cwd: process.cwd(),
@@ -539,7 +570,10 @@ test("x setup-shell uses the configured X_HOME bin path", async () => {
     },
   });
 
-  assert.match(result.stdout, /Added .*\.custom-x-home\/bin to PATH in .*\.zshrc\./);
+  assert.match(
+    result.stdout,
+    /Added .*\.custom-x-home\/bin to PATH in .*\.zshrc\./,
+  );
 
   const rcContent = await import("node:fs/promises").then(({ readFile }) =>
     readFile(rcFile, "utf8"),
@@ -553,9 +587,7 @@ test("x setup-shell uses the configured X_HOME bin path", async () => {
 
 test("command store persists across repeated installed command runs", async () => {
   const xHome = await mkdtemp(join(tmpdir(), "type-x-cli-store-"));
-  const {
-    packagePath,
-  } = await createJavaScriptFixturePackage();
+  const { packagePath } = await createJavaScriptFixturePackage();
 
   await execFileAsync("node", [cliEntrypoint, "add", packagePath], {
     cwd: process.cwd(),
@@ -653,9 +685,21 @@ test("x init scaffolds a TypeScript x package", async () => {
 
   assert.equal(packageJson.name, "@acme/my-command");
   assert.equal(packageJson.x.commands["hello-x"].entry, "./dist/src/index.js");
-  assert.equal(packageJson.x.commands["hello-x"].description, "Say hello from hello-x");
-  assert.equal(packageJson.devDependencies["@type-x/typescript-config"], undefined);
-  assert.equal(packageJson.devDependencies["@type-x/types"], cliPackageJson.version);
+  assert.equal(
+    packageJson.x.commands["hello-x"].description,
+    "Say hello from hello-x",
+  );
+  assert.deepEqual(packageJson.x.commands["hello-x"].runtime, {
+    repeatedFlags: "array",
+  });
+  assert.equal(
+    packageJson.devDependencies["@type-x/typescript-config"],
+    undefined,
+  );
+  assert.equal(
+    packageJson.devDependencies["@type-x/types"],
+    cliPackageJson.version,
+  );
   assert.equal(tsconfig.extends, undefined);
   assert.deepEqual(tsconfig.compilerOptions.lib, ["es2022"]);
   assert.deepEqual(tsconfig.compilerOptions.types, ["node"]);
@@ -708,7 +752,10 @@ test("x init --standalone scaffolds a standalone TypeScript CLI", async () => {
 
   assert.equal(packageJson.name, "@acme/hello-standalone");
   assert.equal(packageJson.bin["hello-standalone"], "./dist/src/index.js");
-  assert.equal(packageJson.dependencies["@type-x/runtime"], cliPackageJson.version);
+  assert.equal(
+    packageJson.dependencies["@type-x/runtime"],
+    cliPackageJson.version,
+  );
   assert.equal(packageJson.x, undefined);
   assert.equal(tsconfig.extends, undefined);
   assert.deepEqual(tsconfig.compilerOptions.types, ["node"]);
@@ -727,14 +774,10 @@ test("x init fails before writing files when a template file already exists", as
 
   await assert.rejects(
     () =>
-      execFileAsync(
-        "node",
-        [cliEntrypoint, "init", targetDir],
-        {
-          cwd: process.cwd(),
-          env: process.env,
-        },
-      ),
+      execFileAsync("node", [cliEntrypoint, "init", targetDir], {
+        cwd: process.cwd(),
+        env: process.env,
+      }),
     /Cannot initialize project because .*README\.md.* already exists\./,
   );
 
@@ -746,9 +789,7 @@ test("x init fails before writing files when a template file already exists", as
 test("x doctor reports shell and registry status", async () => {
   const homeDir = await mkdtemp(join(tmpdir(), "type-x-cli-doctor-home-"));
   const xHome = join(homeDir, ".x");
-  const {
-    packagePath,
-  } = await createJavaScriptFixturePackage();
+  const { packagePath } = await createJavaScriptFixturePackage();
 
   await execFileAsync("node", [cliEntrypoint, "add", packagePath], {
     cwd: process.cwd(),
@@ -789,6 +830,7 @@ const createJavaScriptFixturePackage = async ({
   version = "0.0.0",
   description = "Example local development command",
   greeting = "hello from local package",
+  runtime,
 } = {}) => {
   const packagePath = await mkdtemp(join(tmpdir(), "type-x-fixture-js-"));
 
@@ -806,6 +848,7 @@ const createJavaScriptFixturePackage = async ({
             [commandName]: {
               entry: "./dist/hello.js",
               description,
+              ...(runtime !== undefined ? { runtime } : {}),
             },
           },
         },
@@ -929,10 +972,7 @@ const createTypeScriptFixturePackage = async ({
   };
 };
 
-const createFixtureCommandModule = ({
-  greeting,
-  includeStoredName,
-}) => {
+const createFixtureCommandModule = ({ greeting, includeStoredName }) => {
   return [
     "const getName = (value) => {",
     '  return typeof value === "string" ? value : undefined;',

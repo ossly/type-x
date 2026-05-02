@@ -4,21 +4,25 @@ import type { CommandRequest } from "@type-x/types";
 
 export type { CommandRequest } from "@type-x/types";
 
+export type RepeatedFlagsMode = "array" | "last";
+
 export const createRequest = (
   argv: string[],
   {
     invocationArgv = argv,
     cwd = process.cwd(),
     env = process.env,
+    repeatedFlags = "array",
   }: {
     invocationArgv?: string[];
     cwd?: string;
     env?: Record<string, string | undefined>;
+    repeatedFlags?: RepeatedFlagsMode;
   } = {},
 ): CommandRequest => {
   const parsedArgs = parseArgs({
     args: argv,
-    options: inferOptions(argv),
+    options: inferOptions(argv, repeatedFlags),
     allowPositionals: true,
     strict: false,
   });
@@ -39,12 +43,13 @@ export const createRequest = (
 
 const inferOptions = (
   argv: string[],
+  repeatedFlags: RepeatedFlagsMode,
 ): Record<
   string,
   {
     type: "boolean" | "string";
     short?: string;
-    multiple: true;
+    multiple?: true;
   }
 > => {
   const options: Record<
@@ -52,9 +57,10 @@ const inferOptions = (
     {
       type: "boolean" | "string";
       short?: string;
-      multiple: true;
+      multiple?: true;
     }
   > = {};
+  const multiple = repeatedFlags === "array" ? { multiple: true as const } : {};
 
   for (let index = 0; index < argv.length; index += 1) {
     const value = argv[index];
@@ -76,7 +82,7 @@ const inferOptions = (
           shouldTreatNextValueAsString(argv[index + 1])
             ? "string"
             : "boolean",
-        multiple: true,
+        ...multiple,
       };
 
       continue;
@@ -92,7 +98,7 @@ const inferOptions = (
           ? "string"
           : "boolean",
         short,
-        multiple: true,
+        ...multiple,
       };
       continue;
     }
@@ -101,7 +107,7 @@ const inferOptions = (
       options[short] = {
         type: "boolean",
         short,
-        multiple: true,
+        ...multiple,
       };
     }
   }

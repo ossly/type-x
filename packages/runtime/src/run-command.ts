@@ -6,10 +6,11 @@ import { basename, dirname, extname, join, resolve } from "node:path";
 import { createCommandContext } from "./context.js";
 import { expandPath } from "./io.js";
 import { invokeCommand } from "./invoke-command.js";
-import { createRequest } from "./request.js";
+import { createRequest, type RepeatedFlagsMode } from "./request.js";
 
 export interface CommandRuntimeOptions {
   homeDir?: string;
+  repeatedFlags?: RepeatedFlagsMode;
 }
 
 export interface InitCliOptions {
@@ -67,6 +68,9 @@ const runCommand = async <
     invocationArgv: [command.name, ...argv],
     cwd,
     env,
+    ...(options.runtime?.repeatedFlags !== undefined
+      ? { repeatedFlags: options.runtime.repeatedFlags }
+      : {}),
   });
   const context = createCommandContext<TStore>(
     command,

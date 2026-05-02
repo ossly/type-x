@@ -1,4 +1,4 @@
-import { createRequest } from "@type-x/runtime";
+import { createRequest, type RepeatedFlagsMode } from "@type-x/runtime";
 import type { CommandHandler } from "@type-x/types";
 import { executeResolvedCommand } from "../runtime/execute-resolved-command.js";
 import { readRegistry } from "../runtime/registry.js";
@@ -28,7 +28,14 @@ export const runAlias: CommandHandler = async ({ request }) => {
 
   const aliasRequest = createRequest(forwardedArgv, {
     invocationArgv: [aliasName, ...forwardedArgv],
+    ...requestRepeatedFlagsOption(resolvedCommand.runtime?.repeatedFlags),
   });
 
   await executeResolvedCommand(resolvedCommand, aliasRequest, aliasName);
+};
+
+const requestRepeatedFlagsOption = (
+  repeatedFlags: RepeatedFlagsMode | undefined,
+): { repeatedFlags?: RepeatedFlagsMode } => {
+  return repeatedFlags !== undefined ? { repeatedFlags } : {};
 };

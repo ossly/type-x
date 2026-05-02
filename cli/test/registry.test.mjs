@@ -51,6 +51,9 @@ test("writeRegistry persists registry data", async () => {
       packageVersion: "1.0.0",
       entry: "./dist/hello.js",
       description: "Example command",
+      runtime: {
+        repeatedFlags: "last",
+      },
     };
 
     await writeRegistry(registry);

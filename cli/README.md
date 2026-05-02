@@ -84,6 +84,28 @@ When `x` executes a command, it injects the runtime context from `@type-x/runtim
 `--param a --param b` is exposed to the command as
 `request.flags.param === ["a", "b"]`.
 
+Command packages can optionally configure this per command in `package.json`:
+
+```json
+{
+  "x": {
+    "runtime": "1",
+    "commands": {
+      "deploy": {
+        "entry": "./dist/deploy.js",
+        "description": "Deploy an app",
+        "runtime": {
+          "repeatedFlags": "last"
+        }
+      }
+    }
+  }
+}
+```
+
+Both `runtime` and `runtime.repeatedFlags` are optional. When omitted,
+`repeatedFlags` defaults to `"array"`.
+
 ## Store Behavior
 
 Installed commands use the `x` runtime home, which defaults to `~/.type-x/type-x__cli`.
