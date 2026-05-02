@@ -48,7 +48,10 @@ export const loadCommand = async (
   return defaultExport as CommandHandler;
 };
 
-const isPathInsideDirectory = (filePath: string, directory: string): boolean => {
+const isPathInsideDirectory = (
+  filePath: string,
+  directory: string,
+): boolean => {
   const relativePath = relative(resolve(directory), filePath);
   return (
     relativePath.length > 0 &&

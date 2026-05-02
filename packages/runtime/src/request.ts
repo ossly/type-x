@@ -116,10 +116,7 @@ const inferOptions = (
 };
 
 const normalizeFlags = (
-  values: Record<
-    string,
-    string | boolean | string[] | boolean[] | undefined
-  >,
+  values: Record<string, string | boolean | string[] | boolean[] | undefined>,
 ): Record<string, string | boolean | string[] | boolean[]> => {
   const flags: Record<string, string | boolean | string[] | boolean[]> = {};
 
