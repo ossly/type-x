@@ -100,6 +100,7 @@ export interface CommandExecOptions {
   mode?: "capture" | "inherit";
   silent?: boolean;
   throwOnError?: boolean;
+  timeoutMs?: number;
 }
 
 export type CommandExecCommand = string | readonly [string, ...string[]];

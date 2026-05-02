@@ -96,6 +96,10 @@ Options include:
   When `false`, stream command output to the current process stdout/stderr. This is the default.
 - `throwOnError`
   When `false`, return non-zero exit codes instead of throwing. By default it is true.
+- `timeoutMs`
+  Stop the command after this many milliseconds. The process receives `SIGTERM`
+  first and escalates to `SIGKILL` if it does not exit. Timed-out commands use
+  exit code `124`.
 
 When `throwOnError` is left on and the command exits non-zero, `exec()` throws a `CommandExecError` from `@type-x/runtime`. The error message is a stable summary, and the raw process output is available on the error instance through `stdout`, `stderr`, `exitCode`, `command`, `cwd`, and `mode`. `@type-x/runtime` also exports `isCommandExecError(error)` for structural narrowing when you do not want to rely on `instanceof`.
 

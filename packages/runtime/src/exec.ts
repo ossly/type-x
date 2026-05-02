@@ -27,6 +27,14 @@ export const createCommandExec = ({
     };
     const mode = options.mode ?? "capture";
     const silent = options.silent ?? false;
+    const timeoutMs = options.timeoutMs;
+
+    if (
+      timeoutMs !== undefined &&
+      (!Number.isFinite(timeoutMs) || timeoutMs <= 0)
+    ) {
+      throw new Error("`exec` timeoutMs must be a positive number.");
+    }
 
     if (mode === "inherit") {
       if (options.input !== undefined) {
@@ -49,6 +57,7 @@ export const createCommandExec = ({
         stdio: mode === "inherit" ? "inherit" : "pipe",
       });
       const cleanupSignalForwarding = forwardTerminationSignals(child);
+      const timeout = createExecTimeout(child, timeoutMs);
 
       let stdout = "";
       let stderr = "";
@@ -86,13 +95,19 @@ export const createCommandExec = ({
 
       child.on("error", (error) => {
         cleanupSignalForwarding();
+        timeout.cleanup();
         reject(error);
       });
 
       child.on("close", (code, signal) => {
         cleanupSignalForwarding();
+        timeout.cleanup();
         const result: CommandExecResult = {
-          exitCode: code ?? getSignalExitCode(signal) ?? 1,
+          exitCode:
+            code ??
+            (timeout.timedOut ? 124 : undefined) ??
+            getSignalExitCode(signal) ??
+            1,
           stdout,
           stderr,
         };
@@ -137,6 +152,47 @@ export const createCommandExec = ({
 type KillableChildProcess = {
   kill(signal?: NodeJS.Signals | number): boolean;
   pid?: number | undefined;
+};
+
+const createExecTimeout = (
+  child: KillableChildProcess,
+  timeoutMs: number | undefined,
+): {
+  cleanup(): void;
+  readonly timedOut: boolean;
+} => {
+  let timedOut = false;
+  let killTimer: NodeJS.Timeout | undefined;
+
+  if (timeoutMs === undefined) {
+    return {
+      cleanup: () => undefined,
+      get timedOut() {
+        return timedOut;
+      },
+    };
+  }
+
+  const timeoutTimer = globalThis.setTimeout(() => {
+    timedOut = true;
+    killChildProcessGroup(child, "SIGTERM");
+    killTimer = globalThis.setTimeout(() => {
+      killChildProcessGroup(child, "SIGKILL");
+    }, 1_000);
+  }, timeoutMs);
+
+  return {
+    cleanup: () => {
+      globalThis.clearTimeout(timeoutTimer);
+
+      if (killTimer !== undefined) {
+        globalThis.clearTimeout(killTimer);
+      }
+    },
+    get timedOut() {
+      return timedOut;
+    },
+  };
 };
 
 const forwardTerminationSignals = (

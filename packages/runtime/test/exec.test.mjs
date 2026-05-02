@@ -65,6 +65,28 @@ test("createCommandExec can return non-zero results without rejecting", async ()
   assert.equal(result.stderr, "bad");
 });
 
+test("createCommandExec can time out a running command", async () => {
+  const exec = createCommandExec({
+    cwd: process.cwd(),
+    env: process.env,
+  });
+
+  const result = await exec(
+    [
+      "node",
+      "-e",
+      "process.on('SIGTERM', () => process.exit(124)); setInterval(() => {}, 1000);",
+    ],
+    {
+      silent: true,
+      throwOnError: false,
+      timeoutMs: 50,
+    },
+  );
+
+  assert.equal(result.exitCode, 124);
+});
+
 test("createCommandExec throws a structured error by default", async () => {
   const exec = createCommandExec({
     cwd: process.cwd(),
@@ -91,6 +113,33 @@ test("createCommandExec throws a structured error by default", async () => {
       assert.equal(error.combinedOutput, "bad");
       assert.equal(error.cwd, process.cwd());
       assert.equal(error.mode, "capture");
+      return true;
+    },
+  );
+});
+
+test("createCommandExec throws a structured error on timeout by default", async () => {
+  const exec = createCommandExec({
+    cwd: process.cwd(),
+    env: process.env,
+  });
+
+  await assert.rejects(
+    () =>
+      exec(
+        [
+          "node",
+          "-e",
+          "process.on('SIGTERM', () => process.exit(124)); setInterval(() => {}, 1000);",
+        ],
+        {
+          silent: true,
+          timeoutMs: 50,
+        },
+      ),
+    (error) => {
+      assert.equal(error instanceof CommandExecError, true);
+      assert.equal(error.exitCode, 124);
       return true;
     },
   );
