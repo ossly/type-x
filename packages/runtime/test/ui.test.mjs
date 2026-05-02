@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import process from "node:process";
 import { PassThrough, Writable } from "node:stream";
 
 import { createCommandUi } from "../dist/src/index.js";
@@ -30,6 +31,42 @@ test("createCommandUi.task writes start, update, done, and fail lines", () => {
   task.fail("Install failed");
 
   assert.equal(typeof output.getText(), "string");
+});
+
+test("createCommandUi.task stops spinner and restores SIGINT exit behavior", () => {
+  const input = createInteractiveInput("");
+  const output = createBufferedInteractiveOutput();
+  const ui = createCommandUi({ input, output });
+  const previousKill = process.kill;
+  const signals = [];
+
+  output.cursorTo = () => true;
+  output.clearLine = () => true;
+  output.moveCursor = () => true;
+  process.kill = (pid, signal) => {
+    signals.push({ pid, signal });
+    return true;
+  };
+
+  try {
+    const initialListeners = process.listenerCount("SIGINT");
+
+    ui.task("Installing package");
+
+    assert.equal(process.listenerCount("SIGINT"), initialListeners + 1);
+
+    process.emit("SIGINT");
+
+    assert.equal(process.listenerCount("SIGINT"), initialListeners);
+    assert.deepEqual(signals, [
+      {
+        pid: process.pid,
+        signal: "SIGINT",
+      },
+    ]);
+  } finally {
+    process.kill = previousKill;
+  }
 });
 
 const createInteractiveInput = (text) => {

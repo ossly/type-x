@@ -142,8 +142,14 @@ type KillableChildProcess = {
 const forwardTerminationSignals = (
   child: KillableChildProcess,
 ): (() => void) => {
+  let cleanup = (): void => {
+    process.off("SIGINT", onSigint);
+    process.off("SIGTERM", onSigterm);
+  };
   const forwardSignal = (signal: NodeJS.Signals): void => {
+    cleanup();
     killChildProcessGroup(child, signal);
+    process.kill(process.pid, signal);
   };
   const onSigint = (): void => {
     forwardSignal("SIGINT");

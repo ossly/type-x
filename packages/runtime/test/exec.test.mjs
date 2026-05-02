@@ -1,5 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { spawn } from "node:child_process";
+import { mkdtemp, readFile } from "node:fs/promises";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 import process from "node:process";
 
 import {
@@ -209,40 +213,47 @@ test("createCommandExec can inherit stdio for interactive commands", async () =>
   assert.equal(result.stderr, "");
 });
 
-test("createCommandExec forwards SIGINT to running children", async () => {
-  const exec = createCommandExec({
-    cwd: process.cwd(),
-    env: process.env,
-  });
-
-  const resultPromise = exec(
+test("createCommandExec forwards SIGINT to running children before exiting", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "type-x-runtime-exec-sigint-"));
+  const markerFile = join(dir, "marker.txt");
+  const runtimeUrl = new URL("../dist/src/index.js", import.meta.url).href;
+  const child = spawn(
+    "node",
     [
-      "node",
+      "--input-type=module",
       "-e",
       [
-        "process.on('SIGINT', () => {",
-        "  process.stdout.write('interrupted');",
-        "  process.exit(130);",
-        "});",
-        "setInterval(() => {}, 1000);",
-      ].join(""),
+        `import { createCommandExec } from ${JSON.stringify(runtimeUrl)};`,
+        "const exec = createCommandExec({ cwd: process.cwd(), env: process.env });",
+        "void exec([",
+        "  'node',",
+        "  '-e',",
+        JSON.stringify(
+          [
+            "const { writeFileSync } = require('node:fs');",
+            "process.on('SIGINT', () => {",
+            `  writeFileSync(${JSON.stringify(markerFile)}, 'interrupted');`,
+            "  process.exit(130);",
+            "});",
+            "setInterval(() => {}, 1000);",
+          ].join(""),
+        ),
+        "], { silent: true, throwOnError: false });",
+        "setTimeout(() => { process.kill(process.pid, 'SIGINT'); }, 200);",
+        "setTimeout(() => {}, 10_000);",
+      ].join("\n"),
     ],
     {
-      silent: true,
-      throwOnError: false,
+      cwd: process.cwd(),
+      env: process.env,
+      stdio: "ignore",
     },
   );
 
-  await new Promise((resolve) => {
-    globalThis.setTimeout(resolve, 100);
-  });
+  const result = await waitForChildProcess(child);
 
-  process.emit("SIGINT");
-
-  const result = await resultPromise;
-
-  assert.equal(result.exitCode, 130);
-  assert.equal(result.stdout, "interrupted");
+  assert.equal(result.signal, "SIGINT");
+  assert.equal(await readFile(markerFile, "utf8"), "interrupted");
 });
 
 test("createCommandExec rejects input in inherit mode", async () => {
@@ -276,3 +287,12 @@ test("createCommandExec rejects silent mode in inherit mode", async () => {
     /cannot use `silent: true` when `mode` is "inherit"/,
   );
 });
+
+const waitForChildProcess = (child) => {
+  return new Promise((resolve, reject) => {
+    child.on("error", reject);
+    child.on("close", (code, signal) => {
+      resolve({ code, signal });
+    });
+  });
+};
