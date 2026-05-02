@@ -1,6 +1,6 @@
 {
   "name": "@type-x/cli",
-  "version": "0.4.5",
+  "version": "0.4.6",
   "description": "A simple CLI runtime for installable command packages",
   "type": "module",
   "bin": {
