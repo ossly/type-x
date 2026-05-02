@@ -44,6 +44,7 @@ const inferOptions = (
   {
     type: "boolean" | "string";
     short?: string;
+    multiple: true;
   }
 > => {
   const options: Record<
@@ -51,6 +52,7 @@ const inferOptions = (
     {
       type: "boolean" | "string";
       short?: string;
+      multiple: true;
     }
   > = {};
 
@@ -74,6 +76,7 @@ const inferOptions = (
           shouldTreatNextValueAsString(argv[index + 1])
             ? "string"
             : "boolean",
+        multiple: true,
       };
 
       continue;
@@ -89,6 +92,7 @@ const inferOptions = (
           ? "string"
           : "boolean",
         short,
+        multiple: true,
       };
       continue;
     }
@@ -97,6 +101,7 @@ const inferOptions = (
       options[short] = {
         type: "boolean",
         short,
+        multiple: true,
       };
     }
   }
@@ -105,12 +110,24 @@ const inferOptions = (
 };
 
 const normalizeFlags = (
-  values: Record<string, string | boolean | undefined>,
-): Record<string, string | boolean> => {
-  const flags: Record<string, string | boolean> = {};
+  values: Record<
+    string,
+    string | boolean | string[] | boolean[] | undefined
+  >,
+): Record<string, string | boolean | string[] | boolean[]> => {
+  const flags: Record<string, string | boolean | string[] | boolean[]> = {};
 
   for (const [key, value] of Object.entries(values)) {
     if (value === undefined) {
+      continue;
+    }
+
+    if (Array.isArray(value)) {
+      if (value.length === 0) {
+        continue;
+      }
+
+      flags[key] = value.length === 1 ? value[0]! : value;
       continue;
     }
 

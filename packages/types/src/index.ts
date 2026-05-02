@@ -18,7 +18,7 @@ export interface CommandRequest {
   raw: string;
   argv: string[];
   args: string[];
-  flags: Record<string, string | boolean>;
+  flags: Record<string, string | boolean | string[] | boolean[]>;
   invocation: CommandInvocation;
   pwd: string;
   env: Record<string, string | undefined>;

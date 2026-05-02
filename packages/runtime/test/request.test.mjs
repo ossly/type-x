@@ -78,3 +78,24 @@ test("createRequest supports short flags with values and preserves raw argv", ()
     "--literal",
   ]);
 });
+
+test("createRequest parses repeated flags as arrays", () => {
+  const request = createRequest([
+    "--param",
+    "a",
+    "--param",
+    "b",
+    "-n",
+    "one",
+    "-n",
+    "two",
+    "--verbose",
+    "--verbose",
+  ]);
+
+  assert.deepEqual(request.flags, {
+    param: ["a", "b"],
+    n: ["one", "two"],
+    verbose: [true, true],
+  });
+});

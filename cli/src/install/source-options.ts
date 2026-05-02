@@ -52,7 +52,7 @@ export const mergeInstallSource = ({
 };
 
 const readStringFlag = (
-  value: string | boolean | undefined,
+  value: string | boolean | string[] | boolean[] | undefined,
 ): string | undefined => {
   return typeof value === "string" && value.trim().length > 0
     ? value.trim()

@@ -80,6 +80,10 @@ When `x` executes a command, it injects the runtime context from `@type-x/runtim
 - `io`
 - `env`
 
+`request.flags` preserves repeated command flags as arrays. For example,
+`--param a --param b` is exposed to the command as
+`request.flags.param === ["a", "b"]`.
+
 ## Store Behavior
 
 Installed commands use the `x` runtime home, which defaults to `~/.type-x/type-x__cli`.

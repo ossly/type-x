@@ -12,6 +12,12 @@ This package is intentionally small. It contains the public runtime contract:
 
 Use it when you only want types. If you are already depending on `@type-x/runtime`, you can import the same public types from there as well.
 
+`CommandRequest["flags"]` accepts scalar and repeated flag values:
+
+```ts
+Record<string, string | boolean | string[] | boolean[]>;
+```
+
 ## Author
 
 [Iñigo Taibo](https://github.com/itaibo)

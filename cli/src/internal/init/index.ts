@@ -116,7 +116,7 @@ const assertTemplateFilesDoNotExist = async (
 };
 
 const readStringFlag = (
-  value: string | boolean | undefined,
+  value: string | boolean | string[] | boolean[] | undefined,
 ): string | undefined => {
   return typeof value === "string" ? normalizeInputValue(value) : undefined;
 };

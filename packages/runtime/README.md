@@ -44,6 +44,18 @@ The injected context exposes:
 - `io`
 - `env`
 
+`request.flags` contains parsed CLI flags. A flag used once is exposed as a
+single `string` or `boolean`; a repeated flag is exposed as an array:
+
+```sh
+my-cli --param a --param b --verbose
+```
+
+```ts
+context.request.flags.param; // ["a", "b"]
+context.request.flags.verbose; // true
+```
+
 ## Exec
 
 `context.exec()` runs a shell command string and returns:
