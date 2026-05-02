@@ -19,27 +19,35 @@ export interface CommandStore<
 }
 
 export type StorePath<TValue> =
-  TValue extends Record<string, unknown>
+  NonNullable<TValue> extends Record<string, unknown>
     ? {
-        [K in Extract<keyof TValue, string>]: TValue[K] extends Record<
-          string,
-          unknown
-        >
-          ? K | `${K}.${StorePath<TValue[K]>}`
+        [K in Extract<keyof NonNullable<TValue>, string>]: NonNullable<
+          NonNullable<TValue>[K]
+        > extends Record<string, unknown>
+          ? K | `${K}.${StorePath<NonNullable<NonNullable<TValue>[K]>>}`
           : K;
-      }[Extract<keyof TValue, string>]
+      }[Extract<keyof NonNullable<TValue>, string>]
     : never;
 
 export type StorePathValue<
   TValue,
   TPath extends string,
-> = TPath extends keyof TValue
-  ? TValue[TPath]
+> = TPath extends keyof NonNullable<TValue>
+  ? NonNullable<TValue>[TPath]
   : TPath extends `${infer Head}.${infer Rest}`
-    ? Head extends keyof TValue
-      ? StorePathValue<TValue[Head], Rest>
-      : never
-    : never;
+    ? StorePathValue<NonNullable<StorePathSegmentValue<TValue, Head>>, Rest>
+    : StorePathSegmentValue<TValue, TPath>;
+
+type StorePathSegmentValue<
+  TValue,
+  TSegment extends string,
+> = TSegment extends keyof NonNullable<TValue>
+  ? NonNullable<TValue>[TSegment]
+  : {
+      [K in Extract<keyof NonNullable<TValue>, string>]: TSegment extends `${K}`
+        ? NonNullable<TValue>[K]
+        : never;
+    }[Extract<keyof NonNullable<TValue>, string>];
 
 export interface CommandInvocation {
   raw: string;
