@@ -1,6 +1,6 @@
 {
   "name": "@type-x/runtime",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "Run commands with the same runtime context as @type-x/cli",
   "type": "module",
   "files": [
