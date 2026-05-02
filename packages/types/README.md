@@ -32,6 +32,12 @@ context.store.set("providers.github", "hello");
 context.store.get("providers.github");
 ```
 
+`CommandContext.fail()` reports expected user-facing failures:
+
+```ts
+context.fail("Missing token", { exitCode: 2 });
+```
+
 ## Author
 
 [Iñigo Taibo](https://github.com/itaibo)

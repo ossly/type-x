@@ -1,4 +1,29 @@
-import type { CommandExecErrorDetails } from "@type-x/types";
+import type {
+  CommandExecErrorDetails,
+  CommandFailOptions,
+} from "@type-x/types";
+
+export class CommandFailure extends Error {
+  exitCode: number;
+  code: "COMMAND_FAILURE";
+
+  constructor(message: string, options: CommandFailOptions = {}) {
+    super(message);
+    this.name = "CommandFailure";
+    this.exitCode = options.exitCode ?? 1;
+    this.code = "COMMAND_FAILURE";
+  }
+}
+
+export const isCommandFailure = (error: unknown): error is CommandFailure => {
+  return Boolean(
+    error instanceof Error &&
+    "code" in error &&
+    error.code === "COMMAND_FAILURE" &&
+    "exitCode" in error &&
+    typeof error.exitCode === "number",
+  );
+};
 
 export class CommandExecError extends Error implements CommandExecErrorDetails {
   command: string;

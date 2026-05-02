@@ -4,6 +4,7 @@ import { homedir } from "node:os";
 import { basename, dirname, extname, join, resolve } from "node:path";
 
 import { createCommandContext } from "./context.js";
+import { isCommandFailure } from "./errors.js";
 import { expandPath } from "./io.js";
 import { invokeCommand } from "./invoke-command.js";
 import { createRequest, type RepeatedFlagsMode } from "./request.js";
@@ -38,6 +39,14 @@ export const initCli = <
   options: InitCliOptions = {},
 ): void => {
   void runCommand(handler, options).catch((error: unknown) => {
+    if (isCommandFailure(error)) {
+      if (error.message.length > 0) {
+        console.error(error.message);
+      }
+      process.exitCode = error.exitCode;
+      return;
+    }
+
     console.error(error instanceof Error ? error.message : String(error));
     process.exitCode = 1;
   });

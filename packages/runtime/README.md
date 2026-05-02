@@ -149,6 +149,26 @@ This writes:
 }
 ```
 
+## Failures
+
+Use `context.fail()` for expected user-facing failures:
+
+```ts
+context.fail("GitHub token is required. Run: x auth github");
+```
+
+This prints the message to stderr and sets exit code `1`. You can choose a
+different code:
+
+```ts
+context.fail("Invalid config", {
+  exitCode: 2,
+});
+```
+
+Unexpected bugs can still be thrown as normal errors; `initCli` catches them and
+sets exit code `1`.
+
 ## Default Store Location
 
 If you do not override `runtime.homeDir`, the runtime uses:

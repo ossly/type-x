@@ -6,6 +6,7 @@ export type {
   CommandExecErrorDetails,
   CommandExecOptions,
   CommandExecResult,
+  CommandFailOptions,
   CommandGit,
   CommandGitInfo,
   CommandHandler,
@@ -20,7 +21,12 @@ export type {
   CommandTask,
   CommandUi,
 } from "@type-x/types";
-export { CommandExecError, isCommandExecError } from "./errors.js";
+export {
+  CommandExecError,
+  CommandFailure,
+  isCommandExecError,
+  isCommandFailure,
+} from "./errors.js";
 
 export { createCommandContext } from "./context.js";
 export { createCommandEnv } from "./env.js";

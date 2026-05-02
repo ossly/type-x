@@ -6,6 +6,7 @@ import type {
 import { createCommandStore } from "./command-store.js";
 import { createCommandEnv } from "./env.js";
 import { createCommandExec } from "./exec.js";
+import { CommandFailure } from "./errors.js";
 import { createCommandGit } from "./git.js";
 import { createCommandIo } from "./io.js";
 import { createCommandUi } from "./ui.js";
@@ -38,5 +39,8 @@ export const createCommandContext = <
       cwd: request.pwd,
     }),
     env: createCommandEnv(request.env),
+    fail: (message, options) => {
+      throw new CommandFailure(message, options);
+    },
   };
 };

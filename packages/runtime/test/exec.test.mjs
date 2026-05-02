@@ -4,8 +4,10 @@ import process from "node:process";
 
 import {
   CommandExecError,
+  CommandFailure,
   createCommandExec,
   isCommandExecError,
+  isCommandFailure,
 } from "../dist/src/index.js";
 
 test("createCommandExec runs a command and captures stdout", async () => {
@@ -144,6 +146,17 @@ test("isCommandExecError narrows structured exec errors", async () => {
 test("isCommandExecError rejects non-exec errors", () => {
   assert.equal(isCommandExecError(new Error("plain")), false);
   assert.equal(isCommandExecError({ code: "COMMAND_EXEC_ERROR" }), false);
+});
+
+test("isCommandFailure narrows command failures", () => {
+  const error = new CommandFailure("Missing token", {
+    exitCode: 2,
+  });
+
+  assert.equal(isCommandFailure(error), true);
+  assert.equal(isCommandFailure(new Error("plain")), false);
+  assert.equal(error.message, "Missing token");
+  assert.equal(error.exitCode, 2);
 });
 
 test("createCommandExec writes through to stdio when silent is false", async () => {

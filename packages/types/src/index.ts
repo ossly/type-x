@@ -77,6 +77,10 @@ export interface CommandLog {
   error: (...args: unknown[]) => void;
 }
 
+export interface CommandFailOptions {
+  exitCode?: number;
+}
+
 export interface CommandUi {
   confirm(message: string): Promise<boolean>;
   input(message: string): Promise<string>;
@@ -172,6 +176,7 @@ export interface CommandContext<
   git: CommandGit;
   io: CommandIo;
   env: CommandEnv;
+  fail(message: string, options?: CommandFailOptions): never;
 }
 
 export type CommandHandler<

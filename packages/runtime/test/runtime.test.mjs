@@ -39,20 +39,23 @@ test("initCli uses ~/.type-x/<package-name> store by default", async () => {
   process.argv = ["node", entryFilePath, "hello", "123"];
 
   try {
-    initCli(async (context) => {
-      await context.store.set("runs", 1);
+    initCli(
+      async (context) => {
+        await context.store.set("runs", 1);
 
-      assert.equal(context.command.name, "runtime-cli");
-      assert.equal(context.command.packageName, "@examples/runtime-cli");
-      assert.equal(context.command.version, "1.2.3");
-      assert.deepEqual(context.request.argv, ["hello", "123"]);
-      assert.deepEqual(context.request.args, ["hello", "123"]);
-      assert.equal(context.request.invocation.raw, "runtime-cli hello 123");
-      resolveHandler();
-    }, {
-      cwd,
-      entryFilePath,
-    });
+        assert.equal(context.command.name, "runtime-cli");
+        assert.equal(context.command.packageName, "@examples/runtime-cli");
+        assert.equal(context.command.version, "1.2.3");
+        assert.deepEqual(context.request.argv, ["hello", "123"]);
+        assert.deepEqual(context.request.args, ["hello", "123"]);
+        assert.equal(context.request.invocation.raw, "runtime-cli hello 123");
+        resolveHandler();
+      },
+      {
+        cwd,
+        entryFilePath,
+      },
+    );
 
     await handlerFinished;
 
@@ -85,19 +88,22 @@ test("initCli supports overriding runtime homeDir", async () => {
   process.argv = ["node", entryFilePath, "hello"];
 
   try {
-    initCli(async (context) => {
-      await context.store.set("runs", 2);
-      resolveHandler();
-    }, {
-      cwd,
-      entryFilePath,
-      name: "runtime-cli",
-      packageName: "@examples/runtime-cli",
-      version: "1.2.3",
-      runtime: {
-        homeDir: customHomeDir,
+    initCli(
+      async (context) => {
+        await context.store.set("runs", 2);
+        resolveHandler();
       },
-    });
+      {
+        cwd,
+        entryFilePath,
+        name: "runtime-cli",
+        packageName: "@examples/runtime-cli",
+        version: "1.2.3",
+        runtime: {
+          homeDir: customHomeDir,
+        },
+      },
+    );
 
     await handlerFinished;
 
@@ -125,19 +131,22 @@ test("initCli expands ~ in runtime homeDir overrides", async () => {
   process.argv = ["node", entryFilePath, "hello"];
 
   try {
-    initCli(async (context) => {
-      await context.store.set("runs", 3);
-      resolveHandler();
-    }, {
-      cwd,
-      entryFilePath,
-      name: "runtime-cli",
-      packageName: "@examples/runtime-cli",
-      version: "1.2.3",
-      runtime: {
-        homeDir: "~/.hello",
+    initCli(
+      async (context) => {
+        await context.store.set("runs", 3);
+        resolveHandler();
       },
-    });
+      {
+        cwd,
+        entryFilePath,
+        name: "runtime-cli",
+        packageName: "@examples/runtime-cli",
+        version: "1.2.3",
+        runtime: {
+          homeDir: "~/.hello",
+        },
+      },
+    );
 
     await handlerFinished;
 
@@ -161,31 +170,27 @@ test("initCli supports repeated flag parsing options", async () => {
     resolveHandler = resolve;
   });
 
-  process.argv = [
-    "node",
-    entryFilePath,
-    "--param",
-    "a",
-    "--param",
-    "b",
-  ];
+  process.argv = ["node", entryFilePath, "--param", "a", "--param", "b"];
 
   try {
-    initCli(async (context) => {
-      assert.deepEqual(context.request.flags, {
-        param: "b",
-      });
-      resolveHandler();
-    }, {
-      cwd,
-      entryFilePath,
-      name: "runtime-cli",
-      packageName: "@examples/runtime-cli",
-      version: "1.2.3",
-      runtime: {
-        repeatedFlags: "last",
+    initCli(
+      async (context) => {
+        assert.deepEqual(context.request.flags, {
+          param: "b",
+        });
+        resolveHandler();
       },
-    });
+      {
+        cwd,
+        entryFilePath,
+        name: "runtime-cli",
+        packageName: "@examples/runtime-cli",
+        version: "1.2.3",
+        runtime: {
+          repeatedFlags: "last",
+        },
+      },
+    );
 
     await handlerFinished;
   } finally {
@@ -220,17 +225,61 @@ test("initCli sets process exit code on errors", async () => {
   process.exitCode = undefined;
 
   try {
-    initCli(async () => {
-      throw new Error("boom");
-    }, {
-      cwd,
-      entryFilePath,
-    });
+    initCli(
+      async () => {
+        throw new Error("boom");
+      },
+      {
+        cwd,
+        entryFilePath,
+      },
+    );
 
     await waitFor(() => process.exitCode === 1);
 
     assert.equal(process.exitCode, 1);
     assert.deepEqual(errorMessages, ["boom"]);
+  } finally {
+    globalThis.console.error = previousError;
+    process.argv = previousArgv;
+    process.exitCode = previousExitCode;
+  }
+});
+
+test("initCli handles context.fail as a user-facing failure", async () => {
+  const previousArgv = process.argv;
+  const previousExitCode = process.exitCode;
+  const previousError = globalThis.console.error;
+  const cwd = await mkdtemp(join(tmpdir(), "type-x-runtime-fail-"));
+  const entryFilePath = join(cwd, "dist/cli.js");
+  const errorMessages = [];
+
+  globalThis.console.error = (message) => {
+    errorMessages.push(String(message));
+  };
+  process.argv = ["node", entryFilePath, "hello"];
+  process.exitCode = undefined;
+
+  try {
+    initCli(
+      (context) => {
+        context.fail("Missing token", {
+          exitCode: 2,
+        });
+      },
+      {
+        cwd,
+        entryFilePath,
+        name: "runtime-cli",
+        packageName: "@examples/runtime-cli",
+        version: "1.2.3",
+      },
+    );
+
+    await waitFor(() => process.exitCode === 2);
+
+    assert.equal(process.exitCode, 2);
+    assert.deepEqual(errorMessages, ["Missing token"]);
   } finally {
     globalThis.console.error = previousError;
     process.argv = previousArgv;
