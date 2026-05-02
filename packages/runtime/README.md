@@ -129,6 +129,26 @@ try {
 }
 ```
 
+## Store
+
+`context.store` persists JSON state for the command package. Keys can be top-level
+or dot paths:
+
+```ts
+await context.store.set("providers.github", "hello");
+await context.store.get("providers.github"); // "hello"
+```
+
+This writes:
+
+```json
+{
+  "providers": {
+    "github": "hello"
+  }
+}
+```
+
 ## Default Store Location
 
 If you do not override `runtime.homeDir`, the runtime uses:

@@ -1,13 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, readFile } from "node:fs/promises";
+import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
-import {
-  createCommandStore,
-  getStoreFilePath,
-} from "../dist/src/index.js";
+import { createCommandStore, getStoreFilePath } from "../dist/src/index.js";
 
 test("command store persists values for a package", async () => {
   const homeDir = await mkdtemp(join(tmpdir(), "type-x-runtime-store-"));
@@ -36,8 +33,14 @@ test("command store persists values for a package", async () => {
 test("command store is shared across commands in the same package", async () => {
   const homeDir = await mkdtemp(join(tmpdir(), "type-x-runtime-store-scope-"));
   const packageStore = createCommandStore("@examples/hello-tools", homeDir);
-  const otherCommandStore = createCommandStore("@examples/hello-tools", homeDir);
-  const otherPackageStore = createCommandStore("@examples/other-tools", homeDir);
+  const otherCommandStore = createCommandStore(
+    "@examples/hello-tools",
+    homeDir,
+  );
+  const otherPackageStore = createCommandStore(
+    "@examples/other-tools",
+    homeDir,
+  );
 
   await packageStore.set("runs", 2);
   await otherCommandStore.set("name", "codex");
@@ -55,4 +58,73 @@ test("command store is shared across commands in the same package", async () => 
   await otherCommandStore.clear();
   assert.deepEqual(await otherCommandStore.all(), {});
   assert.equal(await otherPackageStore.get("runs"), 11);
+});
+
+test("command store supports dot notation paths", async () => {
+  const homeDir = await mkdtemp(join(tmpdir(), "type-x-runtime-store-paths-"));
+  const store = createCommandStore("@examples/hello-tools", homeDir);
+
+  assert.equal(await store.get("providers.github"), undefined);
+  assert.equal(await store.has("providers.github"), false);
+
+  await store.set("providers.github", "hello");
+  await store.set("providers.gitlab", "bonjour");
+
+  assert.equal(await store.get("providers.github"), "hello");
+  assert.equal(await store.has("providers.github"), true);
+  assert.deepEqual(await store.all(), {
+    providers: {
+      github: "hello",
+      gitlab: "bonjour",
+    },
+  });
+
+  await store.delete("providers.github");
+
+  assert.equal(await store.get("providers.github"), undefined);
+  assert.deepEqual(await store.all(), {
+    providers: {
+      gitlab: "bonjour",
+    },
+  });
+});
+
+test("command store preserves literal dotted keys when present", async () => {
+  const homeDir = await mkdtemp(
+    join(tmpdir(), "type-x-runtime-store-literal-"),
+  );
+  const store = createCommandStore("@examples/hello-tools", homeDir);
+  const storeFile = await getStoreFilePath("@examples/hello-tools", homeDir);
+
+  await writeFile(
+    storeFile,
+    JSON.stringify(
+      {
+        providers: {
+          github: "nested",
+        },
+        "providers.github": "literal",
+      },
+      null,
+      2,
+    ) + "\n",
+    "utf8",
+  );
+
+  assert.equal(await store.get("providers.github"), "literal");
+  assert.deepEqual(await store.all(), {
+    providers: {
+      github: "nested",
+    },
+    "providers.github": "literal",
+  });
+
+  await store.delete("providers.github");
+
+  assert.equal(await store.get("providers.github"), "nested");
+  assert.deepEqual(await store.all(), {
+    providers: {
+      github: "nested",
+    },
+  });
 });

@@ -2,12 +2,44 @@ export interface CommandStore<
   TStore extends Record<string, unknown> = Record<string, unknown>,
 > {
   get<K extends keyof TStore>(key: K): Promise<TStore[K] | undefined>;
+  get<K extends StorePath<TStore>>(
+    key: K,
+  ): Promise<StorePathValue<TStore, K> | undefined>;
   set<K extends keyof TStore>(key: K, value: TStore[K]): Promise<void>;
+  set<K extends StorePath<TStore>>(
+    key: K,
+    value: StorePathValue<TStore, K>,
+  ): Promise<void>;
   delete<K extends keyof TStore>(key: K): Promise<void>;
+  delete<K extends StorePath<TStore>>(key: K): Promise<void>;
   has<K extends keyof TStore>(key: K): Promise<boolean>;
+  has<K extends StorePath<TStore>>(key: K): Promise<boolean>;
   all(): Promise<Partial<TStore>>;
   clear(): Promise<void>;
 }
+
+export type StorePath<TValue> =
+  TValue extends Record<string, unknown>
+    ? {
+        [K in Extract<keyof TValue, string>]: TValue[K] extends Record<
+          string,
+          unknown
+        >
+          ? K | `${K}.${StorePath<TValue[K]>}`
+          : K;
+      }[Extract<keyof TValue, string>]
+    : never;
+
+export type StorePathValue<
+  TValue,
+  TPath extends string,
+> = TPath extends keyof TValue
+  ? TValue[TPath]
+  : TPath extends `${infer Head}.${infer Rest}`
+    ? Head extends keyof TValue
+      ? StorePathValue<TValue[Head], Rest>
+      : never
+    : never;
 
 export interface CommandInvocation {
   raw: string;

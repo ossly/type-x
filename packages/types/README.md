@@ -25,6 +25,13 @@ context.exec("git status --short");
 context.exec(["git", "status", "--short"]);
 ```
 
+`CommandStore` supports top-level keys and dot paths:
+
+```ts
+context.store.set("providers.github", "hello");
+context.store.get("providers.github");
+```
+
 ## Author
 
 [Iñigo Taibo](https://github.com/itaibo)
