@@ -44,9 +44,11 @@ export const createCommandExec = ({
       const child = spawn(invocation.file, invocation.args, {
         cwd: finalCwd,
         env: finalEnv,
+        detached: process.platform !== "win32",
         shell: invocation.shell,
         stdio: mode === "inherit" ? "inherit" : "pipe",
       });
+      const cleanupSignalForwarding = forwardTerminationSignals(child);
 
       let stdout = "";
       let stderr = "";
@@ -83,12 +85,14 @@ export const createCommandExec = ({
       }
 
       child.on("error", (error) => {
+        cleanupSignalForwarding();
         reject(error);
       });
 
-      child.on("close", (code) => {
+      child.on("close", (code, signal) => {
+        cleanupSignalForwarding();
         const result: CommandExecResult = {
-          exitCode: code ?? 1,
+          exitCode: code ?? getSignalExitCode(signal) ?? 1,
           stdout,
           stderr,
         };
@@ -128,6 +132,63 @@ export const createCommandExec = ({
       }
     });
   };
+};
+
+type KillableChildProcess = {
+  kill(signal?: NodeJS.Signals | number): boolean;
+  pid?: number | undefined;
+};
+
+const forwardTerminationSignals = (
+  child: KillableChildProcess,
+): (() => void) => {
+  const forwardSignal = (signal: NodeJS.Signals): void => {
+    killChildProcessGroup(child, signal);
+  };
+  const onSigint = (): void => {
+    forwardSignal("SIGINT");
+  };
+  const onSigterm = (): void => {
+    forwardSignal("SIGTERM");
+  };
+
+  process.once("SIGINT", onSigint);
+  process.once("SIGTERM", onSigterm);
+
+  return () => {
+    process.off("SIGINT", onSigint);
+    process.off("SIGTERM", onSigterm);
+  };
+};
+
+const killChildProcessGroup = (
+  child: KillableChildProcess,
+  signal: NodeJS.Signals,
+): void => {
+  if (process.platform !== "win32" && child.pid !== undefined) {
+    try {
+      process.kill(-child.pid, signal);
+      return;
+    } catch {
+      // Fall back to killing the child directly below.
+    }
+  }
+
+  child.kill(signal);
+};
+
+const getSignalExitCode = (
+  signal: NodeJS.Signals | null,
+): number | undefined => {
+  if (signal === "SIGINT") {
+    return 130;
+  }
+
+  if (signal === "SIGTERM") {
+    return 143;
+  }
+
+  return undefined;
 };
 
 const resolveCommandInvocation = (

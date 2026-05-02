@@ -209,6 +209,42 @@ test("createCommandExec can inherit stdio for interactive commands", async () =>
   assert.equal(result.stderr, "");
 });
 
+test("createCommandExec forwards SIGINT to running children", async () => {
+  const exec = createCommandExec({
+    cwd: process.cwd(),
+    env: process.env,
+  });
+
+  const resultPromise = exec(
+    [
+      "node",
+      "-e",
+      [
+        "process.on('SIGINT', () => {",
+        "  process.stdout.write('interrupted');",
+        "  process.exit(130);",
+        "});",
+        "setInterval(() => {}, 1000);",
+      ].join(""),
+    ],
+    {
+      silent: true,
+      throwOnError: false,
+    },
+  );
+
+  await new Promise((resolve) => {
+    globalThis.setTimeout(resolve, 100);
+  });
+
+  process.emit("SIGINT");
+
+  const result = await resultPromise;
+
+  assert.equal(result.exitCode, 130);
+  assert.equal(result.stdout, "interrupted");
+});
+
 test("createCommandExec rejects input in inherit mode", async () => {
   const exec = createCommandExec({
     cwd: process.cwd(),
