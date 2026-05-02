@@ -69,11 +69,23 @@ initCli(main, {
 
 ## Exec
 
-`context.exec()` runs a shell command string and returns:
+`context.exec()` runs a command and returns:
 
 - `exitCode`
 - `stdout`
 - `stderr`
+
+Pass a string to run through the shell:
+
+```ts
+await context.exec("git status --short");
+```
+
+Pass an argv tuple to run without shell interpolation:
+
+```ts
+await context.exec(["git", "checkout", branchName]);
+```
 
 Options include:
 

@@ -1,5 +1,6 @@
 import type {
   CommandExec,
+  CommandExecCommand,
   CommandExecOptions,
   CommandExecResult,
 } from "@type-x/types";
@@ -15,9 +16,10 @@ export const createCommandExec = ({
   env: Record<string, string | undefined>;
 }): CommandExec => {
   return async (
-    command: string,
+    command: CommandExecCommand,
     options: CommandExecOptions = {},
   ): Promise<CommandExecResult> => {
+    const invocation = resolveCommandInvocation(command);
     const finalCwd = options.cwd ?? cwd;
     const finalEnv = {
       ...env,
@@ -39,10 +41,10 @@ export const createCommandExec = ({
     }
 
     return new Promise<CommandExecResult>((resolve, reject) => {
-      const child = spawn(command, {
+      const child = spawn(invocation.file, invocation.args, {
         cwd: finalCwd,
         env: finalEnv,
-        shell: true,
+        shell: invocation.shell,
         stdio: mode === "inherit" ? "inherit" : "pipe",
       });
 
@@ -94,7 +96,7 @@ export const createCommandExec = ({
         if ((options.throwOnError ?? true) && result.exitCode !== 0) {
           reject(
             new CommandExecError({
-              command,
+              command: invocation.displayCommand,
               exitCode: result.exitCode,
               stdout,
               stderr,
@@ -126,4 +128,47 @@ export const createCommandExec = ({
       }
     });
   };
+};
+
+const resolveCommandInvocation = (
+  command: CommandExecCommand,
+): {
+  file: string;
+  args: string[];
+  shell: boolean;
+  displayCommand: string;
+} => {
+  if (typeof command === "string") {
+    return {
+      file: command,
+      args: [],
+      shell: true,
+      displayCommand: command,
+    };
+  }
+
+  const [file, ...args] = command;
+
+  if (!file) {
+    throw new Error("`exec` command arrays must include a command name.");
+  }
+
+  return {
+    file,
+    args,
+    shell: false,
+    displayCommand: shellJoin(command),
+  };
+};
+
+const shellJoin = (values: readonly string[]): string => {
+  return values.map(shellQuote).join(" ");
+};
+
+const shellQuote = (value: string): string => {
+  if (/^[a-zA-Z0-9_./:=@+-]+$/.test(value)) {
+    return value;
+  }
+
+  return `'${value.replaceAll("'", "'\\''")}'`;
 };

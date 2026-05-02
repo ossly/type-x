@@ -58,6 +58,8 @@ export interface CommandExecOptions {
   throwOnError?: boolean;
 }
 
+export type CommandExecCommand = string | readonly [string, ...string[]];
+
 export interface CommandExecResult {
   exitCode: number;
   stdout: string;
@@ -74,7 +76,10 @@ export interface CommandExecErrorDetails {
 }
 
 export interface CommandExec {
-  (command: string, options?: CommandExecOptions): Promise<CommandExecResult>;
+  (
+    command: CommandExecCommand,
+    options?: CommandExecOptions,
+  ): Promise<CommandExecResult>;
 }
 
 export interface CommandGitInfo {

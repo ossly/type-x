@@ -2,6 +2,7 @@ export type {
   CommandContext,
   CommandEnv,
   CommandExec,
+  CommandExecCommand,
   CommandExecErrorDetails,
   CommandExecOptions,
   CommandExecResult,

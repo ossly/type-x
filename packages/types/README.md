@@ -18,6 +18,13 @@ Use it when you only want types. If you are already depending on `@type-x/runtim
 Record<string, string | boolean | string[] | boolean[]>;
 ```
 
+`CommandExec` accepts either a shell command string or an argv tuple:
+
+```ts
+context.exec("git status --short");
+context.exec(["git", "status", "--short"]);
+```
+
 ## Author
 
 [Iñigo Taibo](https://github.com/itaibo)
