@@ -1,6 +1,6 @@
 {
   "name": "@type-x/types",
-  "version": "0.4.6",
+  "version": "0.4.7",
   "description": "Shared runtime-facing types for @type-x/cli and @type-x/runtime",
   "type": "module",
   "files": [
