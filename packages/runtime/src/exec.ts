@@ -198,7 +198,7 @@ const createExecTimeout = (
 const forwardTerminationSignals = (
   child: KillableChildProcess,
 ): (() => void) => {
-  let cleanup = (): void => {
+  const cleanup = (): void => {
     process.off("SIGINT", onSigint);
     process.off("SIGTERM", onSigterm);
   };

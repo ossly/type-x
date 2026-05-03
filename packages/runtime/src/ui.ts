@@ -36,22 +36,18 @@ export const createCommandUi = ({
       const spinner = ora({
         text: message,
         stream: output,
+        discardStdin: false,
         isEnabled: true,
       }).start();
-      const cleanupSignalHandling = stopTaskOnTerminationSignal(() => {
-        spinner.stop();
-      });
 
       return {
         update: (nextMessage: string) => {
           spinner.text = nextMessage;
         },
         done: (nextMessage?: string) => {
-          cleanupSignalHandling();
           spinner.succeed(nextMessage ?? spinner.text);
         },
         fail: (nextMessage?: string) => {
-          cleanupSignalHandling();
           spinner.fail(nextMessage ?? spinner.text);
         },
       };
@@ -132,32 +128,4 @@ const inputPrompt = (
 
 const writeLine = (output: NodeJS.WritableStream, message: string): void => {
   output.write(`${message}\n`);
-};
-
-const stopTaskOnTerminationSignal = (stop: () => void): (() => void) => {
-  let cleanup = (): void => {
-    process.off("SIGINT", onSigint);
-    process.off("SIGTERM", onSigterm);
-  };
-  const handleSignal = (signal: NodeJS.Signals): void => {
-    cleanup();
-    stop();
-    process.kill(process.pid, signal);
-  };
-  const onSigint = (): void => {
-    handleSignal("SIGINT");
-  };
-  const onSigterm = (): void => {
-    handleSignal("SIGTERM");
-  };
-
-  process.once("SIGINT", onSigint);
-  process.once("SIGTERM", onSigterm);
-
-  cleanup = () => {
-    process.off("SIGINT", onSigint);
-    process.off("SIGTERM", onSigterm);
-  };
-
-  return cleanup;
 };

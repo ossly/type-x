@@ -33,39 +33,43 @@ test("createCommandUi.task writes start, update, done, and fail lines", () => {
   assert.equal(typeof output.getText(), "string");
 });
 
-test("createCommandUi.task stops spinner and restores SIGINT exit behavior", () => {
-  const input = createInteractiveInput("");
+test("createCommandUi.task does not put stdin into raw mode", () => {
   const output = createBufferedInteractiveOutput();
-  const ui = createCommandUi({ input, output });
-  const previousKill = process.kill;
-  const signals = [];
+  const ui = createCommandUi({ input: process.stdin, output });
+  const isTtyDescriptor = Object.getOwnPropertyDescriptor(
+    process.stdin,
+    "isTTY",
+  );
+  const setRawModeDescriptor = Object.getOwnPropertyDescriptor(
+    process.stdin,
+    "setRawMode",
+  );
+  const rawModes = [];
 
   output.cursorTo = () => true;
   output.clearLine = () => true;
   output.moveCursor = () => true;
-  process.kill = (pid, signal) => {
-    signals.push({ pid, signal });
-    return true;
-  };
+
+  Object.defineProperty(process.stdin, "isTTY", {
+    configurable: true,
+    value: true,
+  });
+  Object.defineProperty(process.stdin, "setRawMode", {
+    configurable: true,
+    value: (enabled) => {
+      rawModes.push(enabled);
+      return process.stdin;
+    },
+  });
 
   try {
-    const initialListeners = process.listenerCount("SIGINT");
+    const task = ui.task("Installing package");
+    task.done("Installed package");
 
-    ui.task("Installing package");
-
-    assert.equal(process.listenerCount("SIGINT"), initialListeners + 1);
-
-    process.emit("SIGINT");
-
-    assert.equal(process.listenerCount("SIGINT"), initialListeners);
-    assert.deepEqual(signals, [
-      {
-        pid: process.pid,
-        signal: "SIGINT",
-      },
-    ]);
+    assert.deepEqual(rawModes, []);
   } finally {
-    process.kill = previousKill;
+    restoreProperty(process.stdin, "isTTY", isTtyDescriptor);
+    restoreProperty(process.stdin, "setRawMode", setRawModeDescriptor);
   }
 });
 
@@ -90,4 +94,13 @@ const createBufferedInteractiveOutput = () => {
   output.getText = () => text;
 
   return output;
+};
+
+const restoreProperty = (object, propertyName, descriptor) => {
+  if (descriptor) {
+    Object.defineProperty(object, propertyName, descriptor);
+    return;
+  }
+
+  delete object[propertyName];
 };

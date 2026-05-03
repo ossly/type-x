@@ -5,6 +5,7 @@ import { mkdtemp, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import process from "node:process";
+import { URL } from "node:url";
 
 import {
   CommandExecError,
@@ -288,6 +289,59 @@ test("createCommandExec forwards SIGINT to running children before exiting", asy
           ].join(""),
         ),
         "], { silent: true, throwOnError: false });",
+        "setTimeout(() => { process.kill(process.pid, 'SIGINT'); }, 200);",
+        "setTimeout(() => {}, 10_000);",
+      ].join("\n"),
+    ],
+    {
+      cwd: process.cwd(),
+      env: process.env,
+      stdio: "ignore",
+    },
+  );
+
+  const result = await waitForChildProcess(child);
+
+  assert.equal(result.signal, "SIGINT");
+  assert.equal(await readFile(markerFile, "utf8"), "interrupted");
+});
+
+test("createCommandExec forwards SIGINT while a UI task is active", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "type-x-runtime-task-sigint-"));
+  const markerFile = join(dir, "marker.txt");
+  const runtimeUrl = new URL("../dist/src/index.js", import.meta.url).href;
+  const child = spawn(
+    "node",
+    [
+      "--input-type=module",
+      "-e",
+      [
+        "import { PassThrough, Writable } from 'node:stream';",
+        `import { createCommandExec, createCommandUi } from ${JSON.stringify(runtimeUrl)};`,
+        "const input = new PassThrough();",
+        "input.isTTY = true;",
+        "const output = new Writable({ write(_chunk, _encoding, callback) { callback(); } });",
+        "output.isTTY = true;",
+        "output.cursorTo = () => true;",
+        "output.clearLine = () => true;",
+        "output.moveCursor = () => true;",
+        "const ui = createCommandUi({ input, output });",
+        "const task = ui.task('Running child command');",
+        "const exec = createCommandExec({ cwd: process.cwd(), env: process.env });",
+        "void exec([",
+        "  'node',",
+        "  '-e',",
+        JSON.stringify(
+          [
+            "const { writeFileSync } = require('node:fs');",
+            "process.on('SIGINT', () => {",
+            `  writeFileSync(${JSON.stringify(markerFile)}, 'interrupted');`,
+            "  process.exit(130);",
+            "});",
+            "setInterval(() => {}, 1000);",
+          ].join(""),
+        ),
+        "], { silent: true, throwOnError: false }).finally(() => task.done());",
         "setTimeout(() => { process.kill(process.pid, 'SIGINT'); }, 200);",
         "setTimeout(() => {}, 10_000);",
       ].join("\n"),
